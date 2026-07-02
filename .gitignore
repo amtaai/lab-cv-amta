@@ -60,6 +60,11 @@ mlruns/
 # data/
 # datasets/
 
+# ---- Subproyecto v-jepa-2 (pesados / upstream, no versionar) ----
+v-jepa-2/models/
+v-jepa-2/data/
+v-jepa-2/third_party/
+
 # ---- Logs / temp ----
 *.log
 logs/
@@ -83,4 +88,4 @@ Thumbs.db
 desktop.ini
 
 # ---- Miscellaneous ----
-docs
+local_docs

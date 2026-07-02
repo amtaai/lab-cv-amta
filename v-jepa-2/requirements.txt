@@ -1,0 +1,9 @@
+# Dependencias LOCALES (web demo + inferencia del modelo destilado).
+# El heavy lifting (V-JEPA2, SAM2, Grounding DINO, VLM) vive en Colab y NO se
+# instala aca — ver colab/train_pipeline.ipynb.
+
+numpy>=1.26
+streamlit>=1.40
+pillow>=10.0
+# torch: instalar la build adecuada para tu maquina desde https://pytorch.org
+# torch>=2.4
