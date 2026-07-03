@@ -65,6 +65,9 @@ v-jepa-2/models/
 v-jepa-2/data/
 v-jepa-2/third_party/
 
+# ---- Dependencias upstream a nivel raiz (pesos de modelos, re-descargables) ----
+/third_party/
+
 # ---- Logs / temp ----
 *.log
 logs/
@@ -89,3 +92,4 @@ desktop.ini
 
 # ---- Miscellaneous ----
 local_docs
+.firecrawl/
