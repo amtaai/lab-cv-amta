@@ -17,6 +17,7 @@ wheels/
 
 # ---- Virtual environments ----
 .venv/
+.conda/
 venv/
 env/
 ENV/
@@ -65,8 +66,11 @@ v-jepa-2/models/
 v-jepa-2/data/
 v-jepa-2/third_party/
 
-# ---- Dependencias upstream a nivel raiz (pesos de modelos, re-descargables) ----
-/third_party/
+# ---- Dependencias upstream (repos clonados, re-descargables; cualquier nivel) ----
+third_party/
+
+# ---- Handoffs (documentos de traspaso, locales) ----
+handoffs/
 
 # ---- Logs / temp ----
 *.log
