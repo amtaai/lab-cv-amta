@@ -1,0 +1,21 @@
+{
+  "n_seqs": 2386,
+  "por_clase": {
+    "2": 696,
+    "1": 660,
+    "3": 625,
+    "4": 405
+  },
+  "n_features": 62,
+  "t_total_s": 2755.078103542328,
+  "t_por_seq_s": 11.299222552975694,
+  "params": {
+    "glcm_distances": [
+      1,
+      4
+    ],
+    "glcm_levels": 32,
+    "ws_min_dist": 8,
+    "ws_sigma": 2.0
+  }
+}

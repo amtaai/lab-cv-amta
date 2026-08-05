@@ -96,4 +96,9 @@ desktop.ini
 
 # ---- Miscellaneous ----
 local_docs
+data_froth
 .firecrawl/
+
+# GATE froth: embeddings pesados de Colab no se versionan (reproducibles con el
+# notebook); el parquet de C1 y los reportes md si.
+froth_gate/results/*.npz
