@@ -1,0 +1,16 @@
+# Servidor RTSP del simulador de camara. Solo RTSP + API de control.
+logLevel: info
+api: yes
+apiAddress: :9997
+
+rtsp: yes
+rtspAddress: :8554
+rtspTransports: [tcp, udp]
+
+# El publisher (ffmpeg) empuja a /cam1. readTimeout alto: el loop de ffmpeg
+# tiene micro-cortes al reiniciar el archivo y no queremos tirar el path.
+readTimeout: 20s
+writeTimeout: 20s
+
+paths:
+  all_others:

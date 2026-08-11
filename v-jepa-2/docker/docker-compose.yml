@@ -10,20 +10,19 @@ services:
       - "9997:9997"     # API de control / health
     volumes:
       - ../core/cascade/rtsp_sim/mediamtx.yml:/mediamtx.yml:ro
-    healthcheck:
-      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:9997/v3/config/global/get || exit 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
+    # Sin healthcheck a proposito: la imagen de mediamtx es scratch (no tiene sh
+    # ni wget) y desde v1.20 la API responde 401 por defecto. La verificacion de
+    # readiness se hace por TCP desde el codigo: rtsp_sim.control.wait_until_ready.
 
   publisher:
     image: linuxserver/ffmpeg:latest
     container_name: cascade-publisher
+    # restart: unless-stopped es lo que da la reconexion. Si mediamtx todavia no
+    # acepta, ffmpeg muere y Docker lo reintenta hasta que el path queda publicado.
     restart: unless-stopped
     depends_on:
       mediamtx:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - ../corpus/raw:/clips:ro
     environment:
@@ -32,10 +31,10 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     # -fflags +genpts es obligatorio: al reiniciar el loop los timestamps del
     # archivo vuelven a cero y mediamtx tira el path por PTS no monotonico.
-    command: >
-      "ffmpeg -re -stream_loop -1 -fflags +genpts -i /clips/$${RTSP_CLIP}
-       -c copy -f rtsp -rtsp_transport tcp
-       rtsp://mediamtx:8554/$${RTSP_STREAM}"
+    # En UNA sola linea a proposito: con `>` de YAML, una linea de continuacion
+    # mas indentada NO se pliega y sh termina leyendola como otro comando.
+    command:
+      - "ffmpeg -re -stream_loop -1 -fflags +genpts -i /clips/$${RTSP_CLIP} -c copy -f rtsp -rtsp_transport tcp rtsp://mediamtx:8554/$${RTSP_STREAM}"
 
   cascade:
     build:
