@@ -24,24 +24,39 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-from core.cascade.cost.schema import DDL, CostEvent
+from core.cascade.cost.schema import COLUMNAS_NUEVAS, DDL, DDL_INDICES, CostEvent
 
 MS_POR_HORA = 3_600_000.0
 
 
 class CostTracker:
-    """Acumula CostEvent y los persiste en SQLite."""
+    """Acumula CostEvent y los persiste en SQLite.
+
+    La db es un log ACUMULATIVO entre corridas. Para que un reporte describa solo
+    la corrida actual, cada tracker genera un run_id y resumen_por_stage() filtra
+    por el. Sin eso, correr dos veces duplicaba los agregados del reporte.
+    """
 
     def __init__(self, db_path: Path, cpu_usd_per_hour: float = 0.0,
-                 flush_every: int = 200) -> None:
+                 flush_every: int = 200, run_id: str | None = None) -> None:
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.cpu_usd_per_hour = cpu_usd_per_hour
         self.flush_every = flush_every
+        self.run_id = run_id or str(uuid.uuid4())
         self._buffer: list[CostEvent] = []
         self._con = sqlite3.connect(self.db_path)
         self._con.executescript(DDL)
+        self._migrar()
+        self._con.executescript(DDL_INDICES)
         self._con.commit()
+
+    def _migrar(self) -> None:
+        """Agrega las columnas nuevas a una db creada por una version anterior."""
+        existentes = {r[1] for r in self._con.execute("PRAGMA table_info(cost_events)")}
+        for col, tipo in COLUMNAS_NUEVAS.items():
+            if col not in existentes:
+                self._con.execute(f"ALTER TABLE cost_events ADD COLUMN {col} {tipo}")
 
     @contextmanager
     def track(self, stage: str, **meta):
@@ -50,6 +65,7 @@ class CostTracker:
             event_id=str(uuid.uuid4()),
             timestamp=datetime.now(timezone.utc).isoformat(),
             stage=stage,
+            run_id=self.run_id,
             meta=dict(meta),
         )
         t_cpu0 = time.process_time_ns()
@@ -82,15 +98,15 @@ class CostTracker:
         if not self._buffer:
             return 0
         filas = [
-            (e.event_id, e.timestamp, e.stage, e.cpu_time_ms, e.gpu_time_ms,
+            (e.event_id, e.run_id, e.timestamp, e.stage, e.cpu_time_ms, e.gpu_time_ms,
              e.tokens_used, e.cost_usd, e.wall_time_ms,
              json.dumps(e.meta, ensure_ascii=False))
             for e in self._buffer
         ]
         self._con.executemany(
-            "INSERT OR REPLACE INTO cost_events (event_id, timestamp, stage,"
+            "INSERT OR REPLACE INTO cost_events (event_id, run_id, timestamp, stage,"
             " cpu_time_ms, gpu_time_ms, tokens_used, cost_usd, wall_time_ms, meta)"
-            " VALUES (?,?,?,?,?,?,?,?,?)",
+            " VALUES (?,?,?,?,?,?,?,?,?,?)",
             filas,
         )
         self._con.commit()
@@ -98,13 +114,22 @@ class CostTracker:
         self._buffer.clear()
         return n
 
-    def resumen_por_stage(self) -> dict:
-        """Agregados por etapa: n eventos, cpu total y medio, costo total."""
+    def resumen_por_stage(self, solo_esta_corrida: bool = True) -> dict:
+        """Agregados por etapa: n eventos, cpu total y medio, costo total.
+
+        Por defecto solo la corrida actual: la db acumula entre corridas y un
+        reporte que sumara todo describiria una historia, no la medicion de hoy.
+        """
         self.flush()
-        cur = self._con.execute(
+        sql = (
             "SELECT stage, COUNT(*), SUM(cpu_time_ms), AVG(cpu_time_ms),"
-            " SUM(wall_time_ms), SUM(cost_usd) FROM cost_events GROUP BY stage"
+            " SUM(wall_time_ms), SUM(cost_usd) FROM cost_events"
         )
+        params: tuple = ()
+        if solo_esta_corrida:
+            sql += " WHERE run_id = ?"
+            params = (self.run_id,)
+        cur = self._con.execute(sql + " GROUP BY stage", params)
         return {
             r[0]: {
                 "n_eventos": r[1],

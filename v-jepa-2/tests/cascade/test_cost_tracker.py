@@ -102,6 +102,51 @@ def test_buffer_se_vuelca_al_llegar_a_flush_every(tmp_path):
     tr.close()
 
 
+def test_resumen_solo_cuenta_la_corrida_actual(tmp_path):
+    """La db acumula entre corridas; el resumen NO debe sumar corridas viejas."""
+    db = tmp_path / "c.db"
+    tr1 = CostTracker(db)
+    for _ in range(3):
+        with tr1.track("motion_detection"):
+            pass
+    tr1.close()
+
+    tr2 = CostTracker(db)  # segunda corrida sobre la MISMA db
+    with tr2.track("motion_detection"):
+        pass
+    resumen = tr2.resumen_por_stage()
+    acumulado = tr2.resumen_por_stage(solo_esta_corrida=False)
+    tr2.close()
+
+    assert resumen["motion_detection"]["n_eventos"] == 1  # solo la corrida 2
+    assert acumulado["motion_detection"]["n_eventos"] == 4  # el log completo
+
+
+def test_db_vieja_sin_run_id_se_migra(tmp_path):
+    """Una db creada por la version anterior no debe romper al abrirla."""
+    db = tmp_path / "vieja.db"
+    con = sqlite3.connect(db)
+    con.executescript(
+        "CREATE TABLE cost_events (event_id TEXT PRIMARY KEY, timestamp TEXT NOT NULL,"
+        " stage TEXT NOT NULL, cpu_time_ms REAL, gpu_time_ms REAL, tokens_used INTEGER,"
+        " cost_usd REAL, wall_time_ms REAL, meta TEXT);"
+    )
+    con.commit()
+    con.close()
+
+    tr = CostTracker(db)
+    with tr.track("motion_detection"):
+        pass
+    tr.close()
+
+    con = sqlite3.connect(db)
+    cols = {r[1] for r in con.execute("PRAGMA table_info(cost_events)")}
+    n = con.execute("SELECT COUNT(*) FROM cost_events").fetchone()[0]
+    con.close()
+    assert "run_id" in cols
+    assert n == 1
+
+
 def test_resumen_por_stage_agrega(tmp_path):
     tr = CostTracker(tmp_path / "c.db")
     for _ in range(2):
