@@ -1,0 +1,52 @@
+name: amta-cascade
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: cascade-mediamtx
+    restart: unless-stopped
+    ports:
+      - "8554:8554"     # RTSP
+      - "9997:9997"     # API de control / health
+    volumes:
+      - ../core/cascade/rtsp_sim/mediamtx.yml:/mediamtx.yml:ro
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:9997/v3/config/global/get || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  publisher:
+    image: linuxserver/ffmpeg:latest
+    container_name: cascade-publisher
+    restart: unless-stopped
+    depends_on:
+      mediamtx:
+        condition: service_healthy
+    volumes:
+      - ../corpus/raw:/clips:ro
+    environment:
+      RTSP_CLIP: ${RTSP_CLIP:-camera_sim.mp4}
+      RTSP_STREAM: ${RTSP_STREAM:-cam1}
+    entrypoint: ["/bin/sh", "-c"]
+    # -fflags +genpts es obligatorio: al reiniciar el loop los timestamps del
+    # archivo vuelven a cero y mediamtx tira el path por PTS no monotonico.
+    command: >
+      "ffmpeg -re -stream_loop -1 -fflags +genpts -i /clips/$${RTSP_CLIP}
+       -c copy -f rtsp -rtsp_transport tcp
+       rtsp://mediamtx:8554/$${RTSP_STREAM}"
+
+  cascade:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: cascade-app
+    volumes:
+      - ..:/app
+    working_dir: /app
+    environment:
+      AMTA_RTSP_URL: ${AMTA_RTSP_URL:-rtsp://mediamtx:8554/cam1}
+      AMTA_CPU_USD_PER_HOUR: ${AMTA_CPU_USD_PER_HOUR:-0.0}
+      AMTA_CV_THREADS: ${AMTA_CV_THREADS:-1}
+    command: ["sleep", "infinity"]

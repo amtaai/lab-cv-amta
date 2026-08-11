@@ -102,3 +102,14 @@ data_froth
 # GATE froth: embeddings pesados de Colab no se versionan (reproducibles con el
 # notebook); el parquet de C1 y los reportes md si.
 froth_gate/results/*.npz
+
+# ---- Cascade de vigilancia (v-jepa-2/core/cascade) ----
+# El corpus crudo es pesado y con licencias heterogeneas: nunca se versiona.
+# El indice (metadata.json), el manifest (hashes) y los reportes SI se versionan,
+# para que el corpus sea reproducible sin git-lfs/DVC.
+v-jepa-2/corpus/raw/
+v-jepa-2/results/*.db
+v-jepa-2/results/*.db-journal
+
+# Salida de la herramienta graphify (cache de extraccion, regenerable).
+graphify-out/
