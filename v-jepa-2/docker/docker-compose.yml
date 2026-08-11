@@ -26,7 +26,8 @@ services:
     volumes:
       - ../corpus/raw:/clips:ro
     environment:
-      RTSP_CLIP: ${RTSP_CLIP:-camera_sim.mp4}
+      # Un clip ya ingestado al corpus. -c copy exige que sea h264.
+      RTSP_CLIP: ${RTSP_CLIP:-primeraPersona.mp4}
       RTSP_STREAM: ${RTSP_STREAM:-cam1}
     entrypoint: ["/bin/sh", "-c"]
     # -fflags +genpts es obligatorio: al reiniciar el loop los timestamps del
