@@ -6,8 +6,12 @@ services:
     container_name: cascade-mediamtx
     restart: unless-stopped
     ports:
-      - "8554:8554"     # RTSP
+      - "8554:8554"     # RTSP — lo que consume el codigo (cv2.VideoCapture, ffprobe)
       - "9997:9997"     # API de control / health
+      # Solo para mirar con ojos humanos. El pipeline NO los usa: una camara real
+      # habla RTSP, asi que el codigo tiene que seguir entrando por 8554.
+      - "8888:8888"     # HLS  -> http://localhost:8888/cam1
+      - "8889:8889"     # WebRTC (menos latencia) -> http://localhost:8889/cam1
     volumes:
       - ../core/cascade/rtsp_sim/mediamtx.yml:/mediamtx.yml:ro
     # Sin healthcheck a proposito: la imagen de mediamtx es scratch (no tiene sh
