@@ -39,7 +39,9 @@ class LocationType(str, Enum):
     RESTAURANT = "restaurant"
     ENTRANCE = "entrance"
     CHECKOUT = "checkout"
-    OTHER = "other"  # material interino que no es interior comercial
+    # No es interior comercial (exterior, estacionamiento, pasillo tecnico).
+    # Se indexa igual, pero NO cuenta para el numero titular: ver reporte.py.
+    OTHER = "other"
 
 
 @dataclass

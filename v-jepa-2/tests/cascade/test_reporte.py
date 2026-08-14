@@ -51,15 +51,29 @@ def _resumen():
                                  "cost_usd_total": 0.0}}
 
 
-def test_corpus_solo_interino_no_publica_numero():
+def test_corpus_sin_clips_comerciales_no_publica_numero():
     clips = [_clip("a", LocationType.OTHER), _clip("b", LocationType.OTHER)]
     stats = [_stats("a", 90, 10), _stats("b", 80, 20)]
     txt = construir_reporte(stats, clips, _resumen(), CascadeConfig())
 
-    assert "PENDIENTE — corpus no representativo" in txt
+    assert "PENDIENTE — corpus insuficiente" in txt
     assert "Hay 0 clips de interior comercial" in txt
-    # El 85% agregado de los clips interinos NO puede aparecer como resultado.
+    assert "2 clips mas estan indexados como `location_type=other`" in txt
+    # El 85% agregado de esos clips NO puede aparecer como resultado.
     assert "% de los frames** de un interior comercial" not in txt
+
+
+def test_corpus_comercial_pero_corto_tambien_queda_pendiente():
+    """Aunque sean del tipo correcto, por debajo del objetivo no se publica."""
+    clips = [_clip(f"c{i}", LocationType.STORE) for i in range(3)]
+    stats = [_stats(f"c{i}", 25, 75) for i in range(3)]
+    txt = construir_reporte(stats, clips, _resumen(), CascadeConfig())
+
+    assert "PENDIENTE — corpus insuficiente" in txt
+    assert "Hay 3 clips de interior comercial" in txt
+    # Sin clips `other`, no se menciona la exclusion.
+    assert "location_type=other" not in txt
+    assert "25.00 % de los frames" not in txt
 
 
 def test_corpus_suficiente_publica_el_numero():

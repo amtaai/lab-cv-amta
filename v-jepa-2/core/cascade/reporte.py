@@ -87,12 +87,16 @@ def construir_reporte(stats_por_clip: list, clips: list[ClipMeta],
     lineas.append("## Veredicto")
     lineas.append("")
     if n_com < MIN_CLIPS_COMERCIALES:
+        n_otros = len(stats_por_clip) - n_com
+        detalle = (
+            f" ({n_otros} clips mas estan indexados como `location_type=other` y no cuentan:"
+            " no son interiores comerciales)." if n_otros else "."
+        )
         lineas.append(
-            f"**PENDIENTE — corpus no representativo.** Hay {n_com} clips de interior "
-            f"comercial sobre un objetivo de {MIN_CLIPS_COMERCIALES}. El % de frames con "
-            "movimiento relevante NO se publica: los clips disponibles son material "
-            "interino (`location_type=other`) y su porcentaje no generaliza a una tienda "
-            "o un restaurante. La instrumentacion de costo SI esta validada."
+            f"**PENDIENTE — corpus insuficiente.** Hay {n_com} clips de interior comercial "
+            f"sobre un objetivo de {MIN_CLIPS_COMERCIALES}{detalle} El % de frames con "
+            "movimiento relevante NO se publica hasta llegar al objetivo: con menos clips "
+            "el numero no generaliza. La instrumentacion de costo SI esta validada."
         )
     else:
         agg = sum(s.frames_kept for s in comerciales)

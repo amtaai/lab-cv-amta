@@ -30,8 +30,11 @@ services:
     volumes:
       - ../corpus/raw:/clips:ro
     environment:
-      # Un clip ya ingestado al corpus. -c copy exige que sea h264.
-      RTSP_CLIP: ${RTSP_CLIP:-primeraPersona.mp4}
+      # Nombre de un clip YA INGESTADO en corpus/raw/. No hay default util: el
+      # corpus arranca vacio, asi que hay que pasarlo:
+      #   RTSP_CLIP=<clip>.mp4 docker compose up -d publisher
+      # -c copy exige que el clip sea h264; si no, re-encodear (ver README).
+      RTSP_CLIP: ${RTSP_CLIP:-camera.mp4}
       RTSP_STREAM: ${RTSP_STREAM:-cam1}
     entrypoint: ["/bin/sh", "-c"]
     # -fflags +genpts es obligatorio: al reiniciar el loop los timestamps del
