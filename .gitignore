@@ -98,6 +98,9 @@ desktop.ini
 local_docs
 data_froth
 .firecrawl/
+# Datasets crudos bajados (camaras de seguridad, etc): pesados y con licencias
+# heterogeneas. Lo que se versiona es el indice del corpus, no los videos.
+datasets/
 
 # GATE froth: embeddings pesados de Colab no se versionan (reproducibles con el
 # notebook); el parquet de C1 y los reportes md si.
