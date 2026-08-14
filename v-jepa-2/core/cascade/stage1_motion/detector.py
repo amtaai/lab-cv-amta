@@ -60,6 +60,10 @@ class MotionDetector:
         contornos, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         area_max = int(max((cv2.contourArea(c) for c in contornos), default=0))
 
+        # Umbral de area RELATIVO al frame: un umbral absoluto en pixeles hace
+        # que el mismo valor sea mucho mas sensible a alta resolucion.
+        umbral_area = self.cfg.min_area_frac * mask.size
+
         # Guarda de flicker: si medio frame se enciende de golpe es la luz, no
         # una persona. Es la falsa positiva dominante en interiores comerciales.
         flicker = (not es_warmup) and fg_ratio > self.cfg.flicker_fg_ratio
@@ -67,7 +71,7 @@ class MotionDetector:
         hay_movimiento = (
             not es_warmup
             and not flicker
-            and area_max >= self.cfg.min_area_px
+            and area_max >= umbral_area
             and fg_ratio >= self.cfg.motion_fg_ratio_min
         )
 
@@ -78,4 +82,5 @@ class MotionDetector:
             largest_area_px=area_max,
             flicker_suspect=flicker,
             is_warmup=es_warmup,
+            meta={"umbral_area_px": round(umbral_area, 1)},
         )

@@ -7,6 +7,9 @@ from __future__ import annotations
 from core.cascade.catalog.schema import ClipMeta, LocationType
 
 MIN_CLIPS_COMERCIALES = 60  # objetivo del corpus declarado en el plan de la semana
+# Por debajo de esta duracion mediana, el corpus es de segmentos curados y no de
+# grabacion continua. Cambia por completo como se lee el % de movimiento.
+DURACION_CONTINUA_MIN_S = 60.0
 
 
 def _es_comercial(c: ClipMeta) -> bool:
@@ -25,7 +28,7 @@ def construir_reporte(stats_por_clip: list, clips: list[ClipMeta],
     lineas.append("")
     lineas.append(
         f"protocolo: MOG2 history={cfg.motion.history} varThreshold={cfg.motion.var_threshold} "
-        f"min_area_px={cfg.motion.min_area_px} warmup={cfg.motion.warmup_frames} "
+        f"min_area_frac={cfg.motion.min_area_frac} warmup={cfg.motion.warmup_frames} "
         f"flicker_fg_ratio={cfg.motion.flicker_fg_ratio} | cv_threads={cfg.cv_num_threads}"
     )
     lineas.append("")
@@ -106,4 +109,20 @@ def construir_reporte(stats_por_clip: list, clips: list[ClipMeta],
             f"**{pct:.2f} % de los frames** de un interior comercial contienen movimiento "
             f"relevante (n={n_com} clips, {tot} frames utiles)."
         )
+        # Sesgo de muestreo: un corpus de clips cortos casi siempre esta curado
+        # alrededor de un evento. El % de movimiento de esos clips NO es el % de
+        # movimiento de una camara que graba todo el dia, que es el que gobierna
+        # el costo mensual. Se detecta por la duracion mediana, que es medible.
+        duraciones = sorted(por_id[s.clip_id].duration_s for s in comerciales)
+        mediana = duraciones[len(duraciones) // 2] if duraciones else 0.0
+        if mediana < DURACION_CONTINUA_MIN_S:
+            lineas.append("")
+            lineas.append(
+                f"> **Ojo con este numero.** La duracion mediana de los clips es {mediana:.1f} s: "
+                "el corpus son segmentos cortos y curados, no grabacion continua. Una camara "
+                "real esta vacia la mayor parte del dia (noche, horas muertas), asi que el % "
+                "de movimiento sobre 24 h es bastante MAS BAJO que este. Para la proyeccion de "
+                "costo mensual por camara hace falta metraje muestreado uniformemente en el "
+                "tiempo, no clips elegidos porque en ellos pasa algo."
+            )
     return "\n".join(lineas)

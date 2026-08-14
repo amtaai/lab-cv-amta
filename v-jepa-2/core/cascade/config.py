@@ -23,7 +23,12 @@ class MotionConfig:
     history: int = 500  # frames que MOG2 recuerda para el modelo de fondo
     var_threshold: float = 16.0  # umbral de Mahalanobis del pixel vs el modelo
     detect_shadows: bool = True  # sombras salen como 127, se filtran del foreground
-    min_area_px: int = 500  # contorno menor a esto = ruido, no movimiento
+    # Area minima del contorno para contar como movimiento, como FRACCION del
+    # frame. Tiene que ser relativa: con un umbral absoluto en pixeles, el mismo
+    # valor es 6.75x mas sensible a 1080p que a 480p y un corpus de resolucion
+    # mixta da resultados incomparables (medido: 99.9% vs 62.1% de movimiento).
+    # 0.0016 = 500 px en 640x480, el valor absoluto que se usaba antes.
+    min_area_frac: float = 0.0016
     warmup_frames: int = 30  # MOG2 marca todo como foreground al arrancar: excluir
     flicker_fg_ratio: float = 0.50  # foreground por encima de esto = cambio de luz global
     motion_fg_ratio_min: float = 0.0005  # piso: menos que esto es ruido de sensor

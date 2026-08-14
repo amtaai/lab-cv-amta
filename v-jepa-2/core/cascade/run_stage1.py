@@ -17,16 +17,43 @@ from core.cascade.catalog.index import cargar_indice, verificar_manifest
 from core.cascade.config import load_cascade_config
 from core.cascade.cost.tracker import CostTracker
 from core.cascade.reporte import construir_reporte
-from core.cascade.stage1_motion.runner import procesar_clip, procesar_stream
+from core.cascade.stage1_motion.runner import (
+    ClipMotionStats,
+    procesar_clip,
+    procesar_stream,
+)
+
+
+def _solo_reporte(cfg) -> int:
+    """Regenera el reporte desde stats.json, sin volver a procesar los clips.
+
+    El barrido completo tarda minutos; cambiar el texto o una regla del reporte
+    no deberia costar eso.
+    """
+    p = cfg.results_dir / "stage1_motion_stats.json"
+    if not p.exists():
+        print(f"ABORTA: no existe {p}. Correr el barrido completo primero.")
+        return 1
+    payload = json.loads(p.read_text(encoding="utf-8"))
+    stats = [ClipMotionStats(**d) for d in payload["por_clip"]]
+    clips = cargar_indice(cfg.corpus_dir)
+    reporte = construir_reporte(stats, clips, payload.get("costo_por_stage", {}), cfg)
+    (cfg.results_dir / "stage1_motion_report.md").write_text(reporte, encoding="utf-8")
+    print(reporte)
+    return 0
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Barrido de Nivel 1 sobre el corpus")
     ap.add_argument("--rtsp", action="store_true", help="ademas, medir sobre el stream RTSP")
     ap.add_argument("--rtsp-frames", type=int, default=300)
+    ap.add_argument("--solo-reporte", action="store_true",
+                    help="regenera el reporte desde stats.json sin reprocesar clips")
     args = ap.parse_args()
 
     cfg = load_cascade_config()
+    if args.solo_reporte:
+        return _solo_reporte(cfg)
     # Un solo hilo de OpenCV: la medicion de CPU time tiene que ser reproducible.
     cv2.setNumThreads(cfg.cv_num_threads)
 
@@ -64,7 +91,7 @@ def main() -> int:
         "protocolo": {
             "history": cfg.motion.history,
             "var_threshold": cfg.motion.var_threshold,
-            "min_area_px": cfg.motion.min_area_px,
+            "min_area_frac": cfg.motion.min_area_frac,
             "warmup_frames": cfg.motion.warmup_frames,
             "flicker_fg_ratio": cfg.motion.flicker_fg_ratio,
             "cv_num_threads": cfg.cv_num_threads,

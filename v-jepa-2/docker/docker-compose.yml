@@ -30,19 +30,22 @@ services:
     volumes:
       - ../corpus/raw:/clips:ro
     environment:
-      # Nombre de un clip YA INGESTADO en corpus/raw/. No hay default util: el
-      # corpus arranca vacio, asi que hay que pasarlo:
+      # Nombre de un clip YA INGESTADO en corpus/raw/:
       #   RTSP_CLIP=<clip>.mp4 docker compose up -d publisher
-      # -c copy exige que el clip sea h264; si no, re-encodear (ver README).
       RTSP_CLIP: ${RTSP_CLIP:-camera.mp4}
       RTSP_STREAM: ${RTSP_STREAM:-cam1}
     entrypoint: ["/bin/sh", "-c"]
     # -fflags +genpts es obligatorio: al reiniciar el loop los timestamps del
     # archivo vuelven a cero y mediamtx tira el path por PTS no monotonico.
+    #
+    # Se re-encodea a h264 en vez de -c copy: el corpus viene en mpeg4 y RTSP no
+    # lo transporta. veryfast + zerolatency mantiene el costo bajo. Este re-encode
+    # corre en OTRO contenedor, asi que no contamina la medicion de CPU del cascade.
+    #
     # En UNA sola linea a proposito: con `>` de YAML, una linea de continuacion
     # mas indentada NO se pliega y sh termina leyendola como otro comando.
     command:
-      - "ffmpeg -re -stream_loop -1 -fflags +genpts -i /clips/$${RTSP_CLIP} -c copy -f rtsp -rtsp_transport tcp rtsp://mediamtx:8554/$${RTSP_STREAM}"
+      - "ffmpeg -re -stream_loop -1 -fflags +genpts -i /clips/$${RTSP_CLIP} -c:v libx264 -preset veryfast -tune zerolatency -pix_fmt yuv420p -an -f rtsp -rtsp_transport tcp rtsp://mediamtx:8554/$${RTSP_STREAM}"
 
   cascade:
     build:
