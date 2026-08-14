@@ -114,5 +114,3 @@ v-jepa-2/corpus/raw/
 v-jepa-2/results/*.db
 v-jepa-2/results/*.db-journal
 
-# Salida de la herramienta graphify (cache de extraccion, regenerable).
-graphify-out/
