@@ -117,6 +117,41 @@ def _remedir(cfg) -> int:
     return 0
 
 
+def _reetiquetar(cfg, args) -> int:
+    """Cambia los ejes declarados de todos los clips indexados.
+
+    Existe porque los ejes se declaran al ingestar y a veces la declaracion
+    resulta estar mal: el nombre de un dataset no prueba que sea lo que dice.
+    Solo toca los ejes que se pasen; el resto queda como estaba.
+    """
+    clips = cargar_indice(cfg.corpus_dir)
+    if not clips:
+        print("ABORTA: corpus vacio, no hay nada que reetiquetar.")
+        return 1
+
+    cambios = {}
+    for c in clips:
+        if args.location_type:
+            antes, c.location_type = c.location_type, LocationType(args.location_type)
+            if antes is not c.location_type:
+                cambios["location_type"] = cambios.get("location_type", 0) + 1
+        if args.camera_height:
+            antes, c.camera_height = c.camera_height, CameraHeight(args.camera_height)
+            if antes is not c.camera_height:
+                cambios["camera_height"] = cambios.get("camera_height", 0) + 1
+        if args.crowd_density:
+            antes, c.crowd_density = c.crowd_density, CrowdDensity(args.crowd_density)
+            if antes is not c.crowd_density:
+                cambios["crowd_density"] = cambios.get("crowd_density", 0) + 1
+        if args.notes:
+            c.notes = args.notes
+
+    guardar_indice(clips, cfg.corpus_dir)
+    escribir_manifest(clips, cfg.corpus_dir)
+    print(f"OK: {len(clips)} clips reetiquetados. Cambios: {cambios or 'ninguno'}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Agrega clips al corpus")
     grupo = ap.add_mutually_exclusive_group(required=True)
@@ -125,6 +160,9 @@ def main() -> int:
     grupo.add_argument("--remedir", action="store_true",
                        help="re-mide la iluminacion de los clips ya indexados y "
                             "reescribe metadata.json (no copia nada)")
+    grupo.add_argument("--reetiquetar", action="store_true",
+                       help="cambia los ejes declarados de TODOS los clips ya "
+                            "indexados (para cuando resulta que la etiqueta estaba mal)")
     ap.add_argument("--clip-id", default=None,
                     help="solo con --file; por defecto el nombre sin extension")
     ap.add_argument("--prefix", default="", help="prefijo para los clip_id del lote")
@@ -144,6 +182,8 @@ def main() -> int:
 
     if args.remedir:
         return _remedir(cfg)
+    if args.reetiquetar:
+        return _reetiquetar(cfg, args)
 
     faltan = [n for n, v in (("--source", args.source),
                              ("--camera-height", args.camera_height),
