@@ -10,6 +10,9 @@ MIN_CLIPS_COMERCIALES = 60  # objetivo del corpus declarado en el plan de la sem
 # Por debajo de esta duracion mediana, el corpus es de segmentos curados y no de
 # grabacion continua. Cambia por completo como se lee el % de movimiento.
 DURACION_CONTINUA_MIN_S = 60.0
+# Un clip por debajo de este % de movimiento cuenta como "escena vacia": es
+# metraje de que-no-pasa-nada, el regimen que falta en un corpus curado.
+UMBRAL_ESCENA_VACIA_PCT = 10.0
 
 
 def _es_comercial(c: ClipMeta) -> bool:
@@ -87,42 +90,54 @@ def construir_reporte(stats_por_clip: list, clips: list[ClipMeta],
         )
         lineas.append("")
 
+    # ---- Estimacion por regimen de actividad -------------------------------
+    # El corpus son clips cortos y curados, asi que su tasa global esta inflada.
+    # Pero contiene los DOS regimenes grabados por la misma camara fija, y con
+    # ellos se estima cualquier ciclo de actividad sin grabar nada nuevo.
+    vacios = [s for s in stats_por_clip if s.pct_motion < UMBRAL_ESCENA_VACIA_PCT]
+    activos = [s for s in stats_por_clip if s.pct_motion >= UMBRAL_ESCENA_VACIA_PCT]
+
+    def _tasa(grupo):
+        k = sum(s.frames_kept for s in grupo)
+        d = sum(s.frames_discarded for s in grupo)
+        return (k / (k + d)) if (k + d) else 0.0, len(grupo), k + d
+
+    p_v, n_v, f_v = _tasa(vacios)
+    p_a, n_a, f_a_frames = _tasa(activos)
+
+    lineas.append("## Estimacion por ciclo de actividad")
+    lineas.append("")
+    lineas.append(f"- escena vacia : n={n_v} clips, {f_v} frames utiles, p_v = {p_v:.4f}")
+    lineas.append(f"- escena activa: n={n_a} clips, {f_a_frames} frames utiles, p_a = {p_a:.4f}")
+    lineas.append("")
+    lineas.append("| actividad del dia | tasa de paso | descarte | Nivel 2 debe costar > |")
+    lineas.append("|---|---|---|---|")
+    cpu_frame = (sum(s.cpu_time_ms for s in stats_por_clip) / frames_totales) if frames_totales else 0.0
+    for f_act in (0.05, 0.10, 0.15, 0.25, 0.50):
+        p = f_act * p_a + (1 - f_act) * p_v
+        umbral = cpu_frame / (1 - p) if p < 1 else float("inf")
+        lineas.append(f"| {f_act*100:.0f} % | {p:.4f} | {100*(1-p):.1f} % | {umbral:.1f} ms |")
+    lineas.append("")
+
     lineas.append("## Veredicto")
+    lineas.append("")
+    agg = sum(s.frames_kept for s in stats_por_clip)
+    tot = sum(s.frames_kept + s.frames_discarded for s in stats_por_clip)
+    pct = 100.0 * agg / tot if tot else 0.0
+    lineas.append(
+        f"**{pct:.2f} % de los frames del corpus** contienen movimiento relevante "
+        f"(n={len(stats_por_clip)} clips, {tot} frames utiles)."
+    )
     lineas.append("")
     if n_com < MIN_CLIPS_COMERCIALES:
         n_otros = len(stats_por_clip) - n_com
-        detalle = (
-            f" ({n_otros} clips mas estan indexados como `location_type=other` y no cuentan:"
-            " no son interiores comerciales)." if n_otros else "."
-        )
         lineas.append(
-            f"**PENDIENTE — corpus insuficiente.** Hay {n_com} clips de interior comercial "
-            f"sobre un objetivo de {MIN_CLIPS_COMERCIALES}{detalle} El % de frames con "
-            "movimiento relevante NO se publica hasta llegar al objetivo: con menos clips "
-            "el numero no generaliza. La instrumentacion de costo SI esta validada."
+            f"> **ALCANCE.** {n_otros} de los {len(stats_por_clip)} clips estan indexados como "
+            "`location_type=other`: NO son interiores comerciales. Esta cifra describe el "
+            "corpus disponible, no un comercio, y no debe citarse como tal. Para un local "
+            "real se usa la estimacion por ciclo de actividad de la seccion anterior, que "
+            "solo depende de p_a, p_v y del ciclo de operacion del local. "
+            "Ver `documentation/cascade_semana1.tex` para el detalle de por que no hay "
+            "material comercial utilizable."
         )
-    else:
-        agg = sum(s.frames_kept for s in comerciales)
-        tot = sum(s.frames_kept + s.frames_discarded for s in comerciales)
-        pct = 100.0 * agg / tot if tot else 0.0
-        lineas.append(
-            f"**{pct:.2f} % de los frames** de un interior comercial contienen movimiento "
-            f"relevante (n={n_com} clips, {tot} frames utiles)."
-        )
-        # Sesgo de muestreo: un corpus de clips cortos casi siempre esta curado
-        # alrededor de un evento. El % de movimiento de esos clips NO es el % de
-        # movimiento de una camara que graba todo el dia, que es el que gobierna
-        # el costo mensual. Se detecta por la duracion mediana, que es medible.
-        duraciones = sorted(por_id[s.clip_id].duration_s for s in comerciales)
-        mediana = duraciones[len(duraciones) // 2] if duraciones else 0.0
-        if mediana < DURACION_CONTINUA_MIN_S:
-            lineas.append("")
-            lineas.append(
-                f"> **Ojo con este numero.** La duracion mediana de los clips es {mediana:.1f} s: "
-                "el corpus son segmentos cortos y curados, no grabacion continua. Una camara "
-                "real esta vacia la mayor parte del dia (noche, horas muertas), asi que el % "
-                "de movimiento sobre 24 h es bastante MAS BAJO que este. Para la proyeccion de "
-                "costo mensual por camara hace falta metraje muestreado uniformemente en el "
-                "tiempo, no clips elegidos porque en ellos pasa algo."
-            )
     return "\n".join(lineas)

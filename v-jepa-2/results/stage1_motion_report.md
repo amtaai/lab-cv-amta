@@ -198,6 +198,21 @@ protocolo: MOG2 history=500 varThreshold=16.0 min_area_frac=0.0016 warmup=30 fli
 
 > La guarda de flicker dispara con cualquier cambio global del frame, y no puede separar un cambio de luz de un movimiento de camara. En clips de camara en mano el contador de flicker mide lo segundo. En CCTV fijo —el caso real— la camara no se mueve, asi que ahi si aisla iluminacion.
 
+## Estimacion por ciclo de actividad
+
+- escena vacia : n=10 clips, 2916 frames utiles, p_v = 0.0106
+- escena activa: n=172 clips, 52326 frames utiles, p_a = 0.6678
+
+| actividad del dia | tasa de paso | descarte | Nivel 2 debe costar > |
+|---|---|---|---|
+| 5 % | 0.0435 | 95.7 % | 7.6 ms |
+| 10 % | 0.0764 | 92.4 % | 7.9 ms |
+| 15 % | 0.1092 | 89.1 % | 8.2 ms |
+| 25 % | 0.1749 | 82.5 % | 8.8 ms |
+| 50 % | 0.3392 | 66.1 % | 11.0 ms |
+
 ## Veredicto
 
-**PENDIENTE — corpus insuficiente.** Hay 0 clips de interior comercial sobre un objetivo de 60 (182 clips mas estan indexados como `location_type=other` y no cuentan: no son interiores comerciales). El % de frames con movimiento relevante NO se publica hasta llegar al objetivo: con menos clips el numero no generaliza. La instrumentacion de costo SI esta validada.
+**63.31 % de los frames del corpus** contienen movimiento relevante (n=182 clips, 55242 frames utiles).
+
+> **ALCANCE.** 182 de los 182 clips estan indexados como `location_type=other`: NO son interiores comerciales. Esta cifra describe el corpus disponible, no un comercio, y no debe citarse como tal. Para un local real se usa la estimacion por ciclo de actividad de la seccion anterior, que solo depende de p_a, p_v y del ciclo de operacion del local. Ver `documentation/cascade_semana1.tex` para el detalle de por que no hay material comercial utilizable.

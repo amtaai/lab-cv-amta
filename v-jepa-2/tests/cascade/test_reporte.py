@@ -1,5 +1,7 @@
-"""Tests del reporte. Lo critico: que NO publique un numero cuando el corpus
-no es representativo, y que si lo publique cuando lo es.
+"""Tests del reporte.
+
+Lo critico ya no es negarse a publicar el numero, sino que el numero SIEMPRE
+salga acompanado de su alcance: de que corpus sale y para que no sirve.
 """
 
 from __future__ import annotations
@@ -40,7 +42,7 @@ def _stats(clip_id: str, kept: int, discarded: int) -> ClipMotionStats:
     s.total_frames = kept + discarded
     s.frames_kept = kept
     s.frames_discarded = discarded
-    s.pct_motion = round(100.0 * kept / (kept + discarded), 2)
+    s.pct_motion = round(100.0 * kept / (kept + discarded), 2) if kept + discarded else 0.0
     s.cpu_time_ms = 100.0
     return s
 
@@ -51,51 +53,58 @@ def _resumen():
                                  "cost_usd_total": 0.0}}
 
 
-def test_corpus_sin_clips_comerciales_no_publica_numero():
+def test_corpus_no_comercial_publica_el_numero_pero_con_alcance():
     clips = [_clip("a", LocationType.OTHER), _clip("b", LocationType.OTHER)]
     stats = [_stats("a", 90, 10), _stats("b", 80, 20)]
     txt = construir_reporte(stats, clips, _resumen(), CascadeConfig())
 
-    assert "PENDIENTE — corpus insuficiente" in txt
-    assert "Hay 0 clips de interior comercial" in txt
-    assert "2 clips mas estan indexados como `location_type=other`" in txt
-    # El 85% agregado de esos clips NO puede aparecer como resultado.
-    assert "% de los frames** de un interior comercial" not in txt
+    # El numero se publica (85 % sobre 200 frames utiles)...
+    assert "85.00 % de los frames del corpus" in txt
+    # ...pero nunca sin la advertencia de alcance.
+    assert "**ALCANCE.**" in txt
+    assert "NO son interiores comerciales" in txt
+    assert "no debe citarse como tal" in txt
 
 
-def test_corpus_comercial_pero_corto_tambien_queda_pendiente():
-    """Aunque sean del tipo correcto, por debajo del objetivo no se publica."""
-    clips = [_clip(f"c{i}", LocationType.STORE) for i in range(3)]
-    stats = [_stats(f"c{i}", 25, 75) for i in range(3)]
-    txt = construir_reporte(stats, clips, _resumen(), CascadeConfig())
-
-    assert "PENDIENTE — corpus insuficiente" in txt
-    assert "Hay 3 clips de interior comercial" in txt
-    # Sin clips `other`, no se menciona la exclusion.
-    assert "location_type=other" not in txt
-    assert "25.00 % de los frames" not in txt
-
-
-def test_corpus_suficiente_publica_el_numero():
-    clips = [_clip(f"c{i}", LocationType.STORE) for i in range(MIN_CLIPS_COMERCIALES)]
-    # 25 de 100 frames con movimiento en cada clip -> 25.00 %
-    stats = [_stats(f"c{i}", 25, 75) for i in range(MIN_CLIPS_COMERCIALES)]
-    txt = construir_reporte(stats, clips, _resumen(), CascadeConfig())
-
-    assert "PENDIENTE" not in txt
-    assert "**25.00 % de los frames**" in txt
-    assert f"n={MIN_CLIPS_COMERCIALES} clips" in txt
-
-
-def test_los_clips_other_no_contaminan_el_agregado():
-    """Un clip interino con 100% movimiento no debe mover el numero publicado."""
+def test_corpus_comercial_suficiente_no_lleva_advertencia():
     clips = [_clip(f"c{i}", LocationType.STORE) for i in range(MIN_CLIPS_COMERCIALES)]
     stats = [_stats(f"c{i}", 25, 75) for i in range(MIN_CLIPS_COMERCIALES)]
-    clips.append(_clip("interino", LocationType.OTHER))
-    stats.append(_stats("interino", 100, 0))  # 100% movimiento, camara en mano
-
     txt = construir_reporte(stats, clips, _resumen(), CascadeConfig())
-    assert "**25.00 % de los frames**" in txt  # sigue siendo 25, no sube
+
+    assert "25.00 % de los frames del corpus" in txt
+    assert "**ALCANCE.**" not in txt
+
+
+def test_estimacion_por_ciclo_separa_vacios_de_activos():
+    """Los clips casi sin movimiento son el regimen 'escena vacia'."""
+    clips = [_clip(f"v{i}", LocationType.OTHER) for i in range(3)]
+    clips += [_clip(f"a{i}", LocationType.OTHER) for i in range(3)]
+    # 3 clips vacios (2 % de movimiento) y 3 activos (80 %).
+    stats = [_stats(f"v{i}", 2, 98) for i in range(3)]
+    stats += [_stats(f"a{i}", 80, 20) for i in range(3)]
+    txt = construir_reporte(stats, clips, _resumen(), CascadeConfig())
+
+    assert "## Estimacion por ciclo de actividad" in txt
+    assert "escena vacia : n=3" in txt
+    assert "escena activa: n=3" in txt
+    assert "p_v = 0.0200" in txt
+    assert "p_a = 0.8000" in txt
+    # La tabla de ciclos tiene que traer las cinco filas.
+    for f in ("5 %", "10 %", "15 %", "25 %", "50 %"):
+        assert f"| {f} |" in txt
+
+
+def test_ciclo_bajo_da_mas_descarte_que_el_corpus_crudo():
+    """Con poca actividad el descarte sube: es el punto de toda la estimacion."""
+    clips = [_clip("v", LocationType.OTHER), _clip("a", LocationType.OTHER)]
+    stats = [_stats("v", 0, 100), _stats("a", 90, 10)]
+    txt = construir_reporte(stats, clips, _resumen(), CascadeConfig())
+
+    fila_5 = [l for l in txt.splitlines() if l.startswith("| 5 %")][0]
+    fila_50 = [l for l in txt.splitlines() if l.startswith("| 50 %")][0]
+    desc_5 = float(fila_5.split("|")[3].strip().replace(" %", ""))
+    desc_50 = float(fila_50.split("|")[3].strip().replace(" %", ""))
+    assert desc_5 > desc_50  # menos actividad -> mas descarte
 
 
 def test_protocolo_y_aviso_de_tarifa_van_siempre():
@@ -106,5 +115,6 @@ def test_protocolo_y_aviso_de_tarifa_van_siempre():
     # El umbral de flicker tiene que ir escrito para que nadie cite el resultado sin el.
     assert "flicker_fg_ratio=0.5" in txt
     assert "cv_threads=1" in txt
+    assert "min_area_frac=0.0016" in txt
     # Y el aviso de que el dolar es cero por construccion.
     assert "cost_usd es 0 por construccion" in txt

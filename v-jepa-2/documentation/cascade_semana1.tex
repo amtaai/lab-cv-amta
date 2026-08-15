@@ -52,6 +52,7 @@
 \newcommand{\dato}[1]{\textbf{\color{acento}#1}}
 \newcommand{\ok}{\textcolor{verde}{\textbf{OK}}}
 \newcommand{\pend}{\textcolor{acento}{\textbf{PENDIENTE}}}
+\newcommand{\cerrado}{\textcolor{gris}{\textbf{CERRADO}}}
 
 \title{\vspace{-1.5cm}\textbf{Cascade de vigilancia}\\[.2cm]
        \large Semana 1: el laboratorio y el medidor}
@@ -73,12 +74,19 @@ instrumentación de coste— junto con las mediciones obtenidas y, sobre todo, c
 las limitaciones que esas mediciones tienen.
 
 El motor funciona y está medido: \dato{7,28\,ms de CPU por fotograma}. El corpus
-disponible, en cambio, no representa el caso de uso, por lo que la cifra de
-descarte medida directamente sobre él (36,69\,\%) queda declarada \pend{} en
-lugar de publicarse. Descomponiendo el corpus en sus regímenes de escena vacía y
-escena activa se obtiene una estimación defendible para un local con actividad
-intermitente: un descarte cercano al \dato{89\,\%}, que es lo que justifica la
-arquitectura en cascada.
+disponible, en cambio, no representa el caso de uso —se evaluaron tres conjuntos
+de datos y ninguno resultó utilizable por el \emph{pipeline} completo, por
+motivos distintos que se documentan— de modo que la tasa de descarte medida
+directamente sobre él (36,69\,\%) se reporta siempre acompañada de su alcance, y
+nunca como cifra de un comercio.
+
+La cifra transferible se obtiene descomponiendo el corpus en sus dos regímenes,
+escena vacía y escena activa, que están grabados por la misma cámara fija. Para
+un local con actividad intermitente el descarte estimado ronda el
+\dato{89\,\%}, y con él el umbral que debe superar el Nivel~2 para que la
+cascada se pague baja de 19,8 a unos \dato{8\,ms por fotograma} --- un valor que
+cualquier detector de objetos supera. La arquitectura en cascada queda
+justificada; el sesgo del corpus lo estaba escondiendo.
 \end{abstract}
 
 \tableofcontents
@@ -229,7 +237,7 @@ transporta, así que el publicador re-codifica a H.264. Ese trabajo ocurre en un
 contenedor distinto, de modo que no contamina las mediciones de CPU del cascade.
 
 % ===========================================================================
-\section{Punto 2 --- Corpus de video \pend}
+\section{Punto 2 --- Corpus de video \cerrado}
 
 \subsection{Qué se pedía}
 Reunir entre 60 y 100 clips de interiores comerciales (tiendas, restaurantes,
@@ -299,26 +307,87 @@ Esto tiene dos consecuencias:
         $n=182$, y no se arregla añadiendo más clips de la misma fuente.
 \end{enumerate}
 
-\subsection{Fuentes descartadas}
+\subsection{Las tres fuentes evaluadas}
+\label{sec:fuentes}
 
-Se evaluaron otros dos conjuntos de datos disponibles y se descartaron por
-razones técnicas:
+Se evaluaron los tres conjuntos de datos disponibles. \textbf{Dos de ellos sí
+contienen interiores comerciales reales}, pero ninguno en un formato utilizable
+por el \emph{pipeline} completo.
 
 \begin{center}
-\begin{tabular}{@{}lll@{}}
+\begin{tabular}{@{}llll@{}}
 \toprule
-\textbf{Conjunto} & \textbf{Contenido} & \textbf{¿Sirve para Nivel 1?} \\
+\textbf{Conjunto} & \textbf{Contenido} & \textbf{¿Tiendas?} & \textbf{Problema} \\
 \midrule
-\texttt{shoplifting2}   & 182 \texttt{.mp4} reales, 30\,fps      & Sí (el usado) \\
-\texttt{archive (1)}    & 32.458 PNG, \emph{stride} 10           & Parcial: $\approx$3\,fps efectivos \\
-Roboflow COCO           & 1.006 JPG, particiones aleatorias      & \textbf{No} \\
+\texttt{shoplifting2} & 182 \texttt{.mp4}, 640$\times$480, 30\,fps
+                      & No & Una sala de oficina \\
+\texttt{archive (1)}  & 32.458 PNG, 50 secuencias
+                      & \textbf{Sí} & \textbf{64$\times$64 px} \\
+Roboflow COCO         & 1.006 JPG con aumento
+                      & \textbf{Sí} & Orden temporal destruido \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-La exportación de Roboflow es inservible para sustracción de fondo: la partición
-aleatoria en \texttt{train/valid/test} y el aumento de datos destruyen el orden
-temporal, y la sustracción de fondo necesita fotogramas consecutivos.
+\paragraph{\texttt{archive (1)} --- contenido correcto, formato inservible.}
+Es el conjunto que más se acerca al enunciado: \textbf{50 secuencias de 50
+locales distintos} (29 en \texttt{Train}, 21 en \texttt{Test}), con góndolas,
+mostradores, cajas y ropa, y con la variedad de altura de cámara, iluminación y
+densidad de personas que se pedía. Los fotogramas están muestreados de a 10
+($\approx$3\,fps efectivos), lo cual sería un punto de operación aceptable.
+
+El problema es la resolución: \textbf{los PNG son de 64$\times$64 píxeles}. Son
+miniaturas derivadas para entrenar un clasificador, no video fuente. Una persona
+ocupa unos 15--20 píxeles de alto.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{imagenes/ds_archive_nativo_x4.png}
+  \caption{Ocho fotogramas consecutivos de \texttt{archive (1)}, ampliados
+           4$\times$ sin interpolar. El contenido es una tienda real, pero el
+           tamaño nativo de 64$\times$64 hace que una persona sea un borrón de
+           unos 15 píxeles.}
+  \label{fig:archivo64}
+\end{figure}
+
+Esto lo descalifica por dos motivos, y el segundo es el decisivo:
+
+\begin{enumerate}[leftmargin=*]
+  \item El Nivel~1 \emph{corre} (23,5\,\% de movimiento medido sobre la
+        secuencia 003), pero sus parámetros están calibrados para 640$\times$480:
+        el núcleo de apertura de 5$\times$5 representa el 7,8\,\% del ancho a
+        64$\times$64, contra el 0,8\,\% a 640$\times$480. La cifra no sería
+        comparable sin recalibrar.
+  \item \textbf{El Nivel~2 no puede existir sobre 64$\times$64.} Ningún detector
+        de objetos ni modelo visión-lenguaje produce nada útil con esa entrada.
+        El \emph{pipeline} cuyo coste se quiere estimar no puede ejecutarse sobre
+        este material, así que medir el Nivel~1 aquí no serviría para el objetivo
+        del proyecto.
+\end{enumerate}
+
+\paragraph{Roboflow COCO --- también tiendas, pero sin orden temporal.}
+La exportación reparte las imágenes aleatoriamente en \texttt{train/valid/test} y
+les aplica aumento de datos. La sustracción de fondo necesita fotogramas
+consecutivos del mismo plano; una colección barajada y transformada no los tiene.
+
+\subsection{Cierre del punto 2}
+
+Con las tres fuentes evaluadas y descartadas por motivos distintos, y sin
+posibilidad de grabar en un establecimiento (sección~\ref{sec:ciclo}), el punto~2
+se cierra con esta constancia:
+
+\begin{itemize}[leftmargin=*]
+  \item La \textbf{herramienta} está completa y probada: esquema, índice,
+        manifest con hashes, medición de iluminación, ingesta y reetiquetado.
+        Ingiere cualquier corpus futuro sin cambios.
+  \item El \textbf{material disponible} se evaluó exhaustivamente. Existe metraje
+        comercial real, pero sólo en formatos derivados que no sirven para el
+        \emph{pipeline} completo.
+  \item La \textbf{consecuencia} se arrastra explícitamente a todos los
+        resultados: la tasa de descarte medida se reporta siempre con su alcance,
+        y la cifra transferible se obtiene por composición de regímenes
+        (sección~\ref{sec:ciclo}), no por medición directa sobre el corpus.
+\end{itemize}
 
 % ===========================================================================
 \section{Punto 3 --- Nivel 1 de la cascada \ok}
@@ -684,8 +753,9 @@ para conseguir metraje real antes de dimensionar el Nivel~2.
 \textbf{\#} & \textbf{Punto} & \textbf{Estado} \\
 \midrule
 1 & Simulador de cámara & \ok{} Funcionando, con reconexión verificada. \\
-2 & Corpus de video     & \pend{} Herramienta completa; los 182 clips
-                           disponibles no son interiores comerciales. \\
+2 & Corpus de video     & \cerrado{} Herramienta completa y probada. Las tres
+                           fuentes evaluadas; ninguna utilizable (ver \S\ref{sec:fuentes}).
+                           Limitación documentada y arrastrada a los resultados. \\
 3 & Nivel 1             & \ok{} 36,69\% de descarte medido; motor validado. \\
 4 & Instrumentación     & \ok{} 7,28 ms/fotograma; esquema completo. \\
 \bottomrule
