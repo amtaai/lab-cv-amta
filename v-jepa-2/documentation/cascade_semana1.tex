@@ -70,9 +70,15 @@ responder más adelante: \emph{¿cuánto cuesta computacionalmente por mes vigil
 una cámara, y con qué precisión?} Se entregan cuatro piezas —simulador de cámara
 RTSP, corpus de video versionado, Nivel~1 de detección de movimiento e
 instrumentación de coste— junto con las mediciones obtenidas y, sobre todo, con
-las limitaciones que esas mediciones tienen. La conclusión principal es que el
-motor funciona y está medido, pero el corpus disponible no representa el caso de
-uso, por lo que la cifra titular queda declarada \pend{} en lugar de publicarse.
+las limitaciones que esas mediciones tienen.
+
+El motor funciona y está medido: \dato{7,28\,ms de CPU por fotograma}. El corpus
+disponible, en cambio, no representa el caso de uso, por lo que la cifra de
+descarte medida directamente sobre él (36,69\,\%) queda declarada \pend{} en
+lugar de publicarse. Descomponiendo el corpus en sus regímenes de escena vacía y
+escena activa se obtiene una estimación defendible para un local con actividad
+intermitente: un descarte cercano al \dato{89\,\%}, que es lo que justifica la
+arquitectura en cascada.
 \end{abstract}
 
 \tableofcontents
@@ -511,6 +517,104 @@ Este número \emph{sí} es transferible: depende del detector y de la resolució
 no del contenido de la imagen.
 
 % ===========================================================================
+\section{El sesgo de muestreo y cómo rodearlo}
+\label{sec:ciclo}
+
+\subsection{El problema}
+
+La duración mediana de los clips del corpus es de 11 segundos, y son segmentos
+elegidos porque en ellos ocurre algo. Una cámara real graba de forma continua y
+está vacía la mayor parte del tiempo: de noche, antes de abrir, en horas muertas.
+El 36,69\% medido corresponde por tanto a un régimen de actividad muy alto, no al
+de una jornada completa.
+
+\subsection{Por qué no se resuelve grabando en un comercio}
+
+La salida aparentemente obvia —poner una cámara en una tienda y grabar unas
+horas— no es aceptable sin más. Grabar personas identificables en un
+establecimiento implica autorización expresa del titular, señalización visible y
+tratamiento de datos personales; no es algo que se pueda hacer de manera
+informal para un experimento. Se descarta como tarea del proyecto.
+
+\subsection{La vía técnica: componer el ciclo de actividad}
+
+El corpus \emph{ya contiene} los dos regímenes, grabados por la misma cámara fija:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Escena vacía} --- los clips \texttt{dim} y los del primer decil
+        del histograma (figura~\ref{fig:histograma}) son tomas de la sala sin
+        nadie: 0\% de movimiento. Son, literalmente, metraje de ``no pasa nada''.
+  \item \textbf{Escena activa} --- el resto, con una o dos personas.
+\end{itemize}
+
+Con ambos se puede construir un ciclo de actividad arbitrario y medir el descarte
+sobre él. Si $f_{a}$ es la fracción del día con actividad, y $p_{a}$, $p_{v}$ son
+las tasas de paso medidas en cada régimen, la tasa global es:
+
+\[
+  p \;=\; f_{a}\,p_{a} \;+\; (1-f_{a})\,p_{v}
+\]
+
+Ambos regímenes están medidos sobre el corpus:
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Régimen} & \textbf{clips} & \textbf{fotogramas útiles} & \textbf{tasa de paso} \\
+\midrule
+Escena vacía  ($p_v$) &  10 &  2.916 & 0,0106 \\
+Escena activa ($p_a$) & 172 & 52.326 & 0,6678 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Con esos dos valores, el descarte del Nivel~1 para distintos ciclos de actividad:
+
+\begin{center}
+\begin{tabular}{@{}rrr@{}}
+\toprule
+\textbf{Actividad ($f_a$)} & \textbf{Tasa de paso $p$} & \textbf{Descarte} \\
+\midrule
+ 5\,\% &  0,0435 & 95,7\,\% \\
+10\,\% &  0,0764 & 92,4\,\% \\
+15\,\% &  0,1092 & \dato{89,1\,\%} \\
+25\,\% &  0,1749 & 82,5\,\% \\
+50\,\% &  0,3392 & 66,1\,\% \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{corpus tal cual (sesgado)}} & 36,7\,\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Un comercio activo el 15\% de las 24~horas daría un descarte cercano al
+\dato{89\%}, no al 37\%. La diferencia es enorme y va toda en la dirección de
+favorecer la cascada.
+
+Esto convierte el metraje faltante en un \textbf{parámetro} en lugar de un
+bloqueo. La proyección de coste se entrega como una superficie sobre $f_a$, y
+cuando se conozca el ciclo real de un local concreto —un dato de operación, que
+el propio establecimiento conoce, no algo que haya que grabar— se sustituye y se
+lee el resultado.
+
+\subsection{Alternativas legítimas si hiciera falta metraje continuo}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Las propias instalaciones de AMTA}: una cámara fija en un pasillo
+        o sala del laboratorio, con el personal informado. Es espacio propio y
+        gente del equipo; reproduce el patrón de ocupación intermitente que
+        interesa medir.
+  \item \textbf{Conjuntos de datos públicos con grabación continua} y licencia
+        que permita el uso, si se encuentra alguno. La mayoría de los conjuntos
+        de videovigilancia publicados vienen recortados por eventos, que es
+        precisamente el sesgo que se quiere evitar.
+  \item \textbf{Un acuerdo formal con un establecimiento}, con autorización
+        escrita y señalización. Es la vía correcta, pero es un trámite de
+        negocio, no una tarea de ingeniería.
+\end{itemize}
+
+% ===========================================================================
 \section{El punto de equilibrio de la cascada}
 
 Hay un resultado que no depende del corpus y que conviene conocer antes de
@@ -535,8 +639,34 @@ fracción de fotogramas que pasan el filtro. Con los valores medidos
 \]
 
 \noindent
-Es decir: \dato{el Nivel~2 debe costar más de 19,8\,ms por fotograma} para que la
-cascada tenga sentido.
+Es decir: con la tasa de paso sesgada del corpus, \dato{el Nivel~2 debería costar
+más de 19,8\,ms por fotograma} para que la cascada tenga sentido.
+
+Pero esa cifra es la peor posible, porque $p$ está inflado por el sesgo de
+muestreo. Con el ciclo de actividad de la sección~\ref{sec:ciclo}, el umbral cae
+mucho:
+
+\begin{center}
+\begin{tabular}{@{}rrr@{}}
+\toprule
+\textbf{Actividad ($f_a$)} & \textbf{$p$} & \textbf{$C_2$ mínimo para que compense} \\
+\midrule
+10\,\% & 0,0764 & 7,9\ ms/fotograma \\
+15\,\% & 0,1092 & \dato{8,2\ ms/fotograma} \\
+25\,\% & 0,1749 & 8,8\ ms/fotograma \\
+50\,\% & 0,3392 & 11,0\ ms/fotograma \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{corpus tal cual}} & 19,8\ ms/fotograma \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+En un escenario realista basta con que el Nivel~2 cueste algo más de
+\textbf{8\,ms por fotograma} —un umbral que cualquier detector de objetos supera
+holgadamente— para que la cascada se pague. La conclusión práctica es que la
+arquitectura en cascada está justificada; lo que el corpus sesgado hacía era
+esconder ese hecho.
 
 Si el Nivel~2 resulta más barato que eso, el Nivel~1 es puro sobrecoste y
 conviene ejecutar el Nivel~2 sobre todo. Con un corpus representativo el
@@ -565,18 +695,17 @@ para conseguir metraje real antes de dimensionar el Nivel~2.
 \subsection{Qué falta}
 
 \begin{enumerate}[leftmargin=*]
-  \item \textbf{Metraje real de un interior comercial.} Es el bloqueo principal.
-        Hace falta una cámara fija en una tienda, restaurante, caja o entrada,
-        grabando \emph{horas seguidas} —incluyendo los ratos muertos— y no clips
-        de 11 segundos elegidos porque en ellos ocurre algo. Sin eso, la cifra
-        de descarte no puede publicarse ni usarse para proyectar coste.
+  \item \textbf{Componer un ciclo de actividad realista} con el material que ya
+        hay (sección~\ref{sec:ciclo}). Es la vía para estimar el descarte sobre
+        24~horas sin grabar nada nuevo.
 
   \item \textbf{Fijar una tarifa de CPU verificada} y convertir los
         7,28\,ms/fotograma en dólares por cámara y mes. No depende de conseguir
-        el metraje: puede dejarse parametrizado.
+        más metraje: el modelo queda parametrizado en $p$.
 
   \item \textbf{Probar el Nivel~1 con poca luz real}, con personas en escena.
-        El corpus actual no permite responderlo.
+        El corpus actual no permite responderlo; la sala propia del laboratorio
+        sí lo permitiría, con luz apagada y personal del equipo.
 
   \item \textbf{Verificar \texttt{crowd\_density}.} Los 182 clips están
         etiquetados \texttt{sparse} por defecto, con una nota que lo indica. Es
