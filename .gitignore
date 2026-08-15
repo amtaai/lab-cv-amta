@@ -113,4 +113,6 @@ froth_gate/results/*.npz
 v-jepa-2/corpus/raw/
 v-jepa-2/results/*.db
 v-jepa-2/results/*.db-journal
+# La documentacion se arma desde los resultados y lleva imagenes pesadas.
+v-jepa-2/documentation/
 
