@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "n_clips": 182,
+  "n_clips": 185,
   "clips": {
     "normal_normal-1": {
       "filename": "normal_normal-1.mp4",
@@ -451,6 +451,21 @@
       "filename": "normal_normal-90.mp4",
       "sha256": "823badbf0c5b85ff202b9c2fefd63af11443e71e83c52d132376f6970320fabb",
       "size_bytes": 19492749
+    },
+    "retail_iprox_caja": {
+      "filename": "retail_iprox_caja.mp4",
+      "sha256": "cca49c4d8c4e082e1f857a9da410435e7d3c0c7b011228a9cc7aff756f57ebc6",
+      "size_bytes": 16753784
+    },
+    "retail_iprox_tienda": {
+      "filename": "retail_iprox_tienda.mp4",
+      "sha256": "9ce4a653975da96786a4d162b4447ba5a957e70067d8f36927f3bca45a1dc973",
+      "size_bytes": 30827835
+    },
+    "retail_usa_tienda": {
+      "filename": "retail_usa_tienda.mp4",
+      "sha256": "f72653cb60007cad9dd23c18155d15d930f259e69916af1065fdf06dd3fbd06f",
+      "size_bytes": 10983311
     },
     "shoplifting_shoplifting-1": {
       "filename": "shoplifting_shoplifting-1.mp4",

@@ -113,6 +113,11 @@ froth_gate/results/*.npz
 v-jepa-2/corpus/raw/
 v-jepa-2/results/*.db
 v-jepa-2/results/*.db-journal
+# Renders del Nivel 2 (stage2_person.visualizar): son salida regenerable y pesan.
+v-jepa-2/results/vis_*.jpg
+# Videos que la gente sube por POST /jobs/video. Entrada de un cliente, no del repo.
+v-jepa-2/uploads/
+v-jepa-2/results/vis_*.mp4
 # La documentacion se arma desde los resultados y lleva imagenes pesadas.
 v-jepa-2/documentation/
 

@@ -1,0 +1,769 @@
+{
+  "schema_version": 1,
+  "_comment": "Ground truth etiquetado A MANO mirando los frames, NO generado por el modelo: si saliera del detector la evaluacion seria circular. Cajas en coordenadas normalizadas [0,1]. 'dificil' marca personas sentadas y cortadas por el borde del cuadro, donde el propio etiquetado es dudoso; el reporte da las metricas con y sin ellas. Un solo anotador, sin segunda pasada: eso acota cuanto valen los valores absolutos.",
+  "n_frames": 31,
+  "n_personas": 50,
+  "n_dificiles": 13,
+  "frames": [
+    {
+      "frame_id": "normal_normal-34__f0061",
+      "clip_id": "normal_normal-34",
+      "frame_index": 61,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.32,
+            0.27,
+            0.51,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-34__f0155",
+      "clip_id": "normal_normal-34",
+      "frame_index": 155,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.09,
+            0.24,
+            0.45,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-62__f0084",
+      "clip_id": "normal_normal-62",
+      "frame_index": 84,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.18,
+            0.27,
+            0.39,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-62__f0127",
+      "clip_id": "normal_normal-62",
+      "frame_index": 127,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.13,
+            0.27,
+            0.37,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-63__f0192",
+      "clip_id": "normal_normal-63",
+      "frame_index": 192,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.18,
+            0.28,
+            0.42,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-63__f0281",
+      "clip_id": "normal_normal-63",
+      "frame_index": 281,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.25,
+            0.3,
+            0.51,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-6__f0144",
+      "clip_id": "normal_normal-6",
+      "frame_index": 144,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.28,
+            0.28,
+            0.53,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.47,
+            0.09,
+            0.73
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-6__f0214",
+      "clip_id": "normal_normal-6",
+      "frame_index": 214,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.31,
+            0.29,
+            0.57,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.46,
+            0.09,
+            0.72
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-80__f0053",
+      "clip_id": "normal_normal-80",
+      "frame_index": 53,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.25,
+            0.24,
+            0.47,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.39,
+            0.08,
+            0.72
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-80__f0075",
+      "clip_id": "normal_normal-80",
+      "frame_index": 75,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.26,
+            0.24,
+            0.48,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.38,
+            0.08,
+            0.72
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-87__f0272",
+      "clip_id": "normal_normal-87",
+      "frame_index": 272,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.26,
+            0.28,
+            0.46,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.36,
+            0.23,
+            0.48,
+            0.93
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.03,
+            0.38,
+            0.2,
+            0.8
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-87__f0319",
+      "clip_id": "normal_normal-87",
+      "frame_index": 319,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.24,
+            0.29,
+            0.48,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.37,
+            0.24,
+            0.51,
+            0.9
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.02,
+            0.38,
+            0.2,
+            0.8
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-9__f0088",
+      "clip_id": "normal_normal-9",
+      "frame_index": 88,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.28,
+            0.33,
+            0.58,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.4,
+            0.06,
+            0.7
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "normal_normal-9__f0314",
+      "clip_id": "normal_normal-9",
+      "frame_index": 314,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.26,
+            0.25,
+            0.47,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.38,
+            0.08,
+            0.72
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-31__f0156",
+      "clip_id": "shoplifting_shoplifting-31",
+      "frame_index": 156,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.47,
+            0.36,
+            0.77,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-31__f0169",
+      "clip_id": "shoplifting_shoplifting-31",
+      "frame_index": 169,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.47,
+            0.36,
+            0.7,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-42__f0036",
+      "clip_id": "shoplifting_shoplifting-42",
+      "frame_index": 36,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.31,
+            0.29,
+            0.51,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.57,
+            0.09,
+            0.95
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-42__f0246",
+      "clip_id": "shoplifting_shoplifting-42",
+      "frame_index": 246,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.23,
+            0.26,
+            0.46,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.57,
+            0.09,
+            0.95
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-45__f0070",
+      "clip_id": "shoplifting_shoplifting-45",
+      "frame_index": 70,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.25,
+            0.29,
+            0.47,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.31,
+            0.09,
+            0.92
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-45__f0350",
+      "clip_id": "shoplifting_shoplifting-45",
+      "frame_index": 350,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.21,
+            0.28,
+            0.42,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.05,
+            0.33,
+            0.18,
+            0.85
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-68__f0145",
+      "clip_id": "shoplifting_shoplifting-68",
+      "frame_index": 145,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.34,
+            0.29,
+            0.55,
+            0.96
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-68__f0305",
+      "clip_id": "shoplifting_shoplifting-68",
+      "frame_index": 305,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.32,
+            0.27,
+            0.49,
+            0.93
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-70__f0101",
+      "clip_id": "shoplifting_shoplifting-70",
+      "frame_index": 101,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.29,
+            0.3,
+            0.48,
+            0.97
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-70__f0172",
+      "clip_id": "shoplifting_shoplifting-70",
+      "frame_index": 172,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.29,
+            0.28,
+            0.48,
+            0.97
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-71__f0034",
+      "clip_id": "shoplifting_shoplifting-71",
+      "frame_index": 34,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.23,
+            0.25,
+            0.46,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-71__f0042",
+      "clip_id": "shoplifting_shoplifting-71",
+      "frame_index": 42,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.2,
+            0.26,
+            0.46,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.5,
+            0.04,
+            0.64
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-72__f0147",
+      "clip_id": "shoplifting_shoplifting-72",
+      "frame_index": 147,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.2,
+            0.25,
+            0.44,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.5,
+            0.04,
+            0.65
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-82__f0033",
+      "clip_id": "shoplifting_shoplifting-82",
+      "frame_index": 33,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.22,
+            0.24,
+            0.48,
+            1.0
+          ],
+          "dificil": false
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-82__f0196",
+      "clip_id": "shoplifting_shoplifting-82",
+      "frame_index": 196,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.2,
+            0.24,
+            0.45,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.48,
+            0.05,
+            0.68
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-83__f0233",
+      "clip_id": "shoplifting_shoplifting-83",
+      "frame_index": 233,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": false,
+      "personas": [
+        {
+          "bbox": [
+            0.16,
+            0.23,
+            0.44,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.48,
+            0.04,
+            0.65
+          ],
+          "dificil": true
+        }
+      ]
+    },
+    {
+      "frame_id": "shoplifting_shoplifting-83__f0249",
+      "clip_id": "shoplifting_shoplifting-83",
+      "frame_index": 249,
+      "width": 640,
+      "height": 480,
+      "paso_nivel1": true,
+      "personas": [
+        {
+          "bbox": [
+            0.19,
+            0.24,
+            0.44,
+            1.0
+          ],
+          "dificil": false
+        },
+        {
+          "bbox": [
+            0.0,
+            0.48,
+            0.04,
+            0.65
+          ],
+          "dificil": true
+        }
+      ]
+    }
+  ]
+}

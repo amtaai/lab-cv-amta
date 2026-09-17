@@ -58,5 +58,59 @@ services:
     environment:
       AMTA_RTSP_URL: ${AMTA_RTSP_URL:-rtsp://mediamtx:8554/cam1}
       AMTA_CPU_USD_PER_HOUR: ${AMTA_CPU_USD_PER_HOUR:-0.0}
+      AMTA_GPU_USD_PER_HOUR: ${AMTA_GPU_USD_PER_HOUR:-0.0}
       AMTA_CV_THREADS: ${AMTA_CV_THREADS:-1}
+      # yolo11 (clases COCO, rapido) o yoloworld (open-vocab por texto).
+      AMTA_DETECTOR: ${AMTA_DETECTOR:-yolo11}
+      AMTA_DEVICE: ${AMTA_DEVICE:-0}
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    # El Nivel 2 corre en la GPU. Sin una, arrancar con AMTA_DEVICE=cpu.
+    #
+    # Se usa `runtime: nvidia` y NO el bloque `deploy.resources.reservations`,
+    # que es la forma moderna. Motivo medido en esta maquina: la forma moderna
+    # pasa por el spec CDI de /etc/cdi/nvidia.yaml, que quedo viejo respecto de
+    # los modulos del kernel y declara nvidia-uvm en el major 237 cuando
+    # /proc/devices lo tiene en 234 (237 hoy es nvidia-caps). Con eso nvidia-smi
+    # anda —usa /dev/nvidia0, major 195, correcto— pero torch tira
+    # "CUDA unknown error" porque abre UVM y cae en otro device.
+    # El runtime legacy lee /proc/devices directo y crea el nodo bien.
+    #
+    # Para volver a la forma moderna: sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+    runtime: nvidia
     command: ["sleep", "infinity"]
+
+  # La misma imagen que `cascade`, pero sirviendo el pipeline por HTTP.
+  # Se levanta aparte para poder correr barridos por linea de comandos sin tener
+  # la API arriba, y al reves.
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: cascade-api
+    ports:
+      - "8000:8000"   # http://localhost:8000/docs
+    volumes:
+      - ..:/app
+    working_dir: /app
+    environment:
+      AMTA_RTSP_URL: ${AMTA_RTSP_URL:-rtsp://mediamtx:8554/cam1}
+      AMTA_CPU_USD_PER_HOUR: ${AMTA_CPU_USD_PER_HOUR:-0.0}
+      AMTA_GPU_USD_PER_HOUR: ${AMTA_GPU_USD_PER_HOUR:-0.0}
+      AMTA_CV_THREADS: ${AMTA_CV_THREADS:-1}
+      AMTA_DETECTOR: ${AMTA_DETECTOR:-yolo11}
+      AMTA_DEVICE: ${AMTA_DEVICE:-0}
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    runtime: nvidia
+    # Como no-root, por lo mismo que el Dockerfile ya explica: /app esta montado
+    # desde el host y todo lo que la API escriba ahi —los videos de POST
+    # /jobs/video, results/costs.db— quedaria de root y el usuario no podria ni
+    # borrarlo. HOME y las caches ya son escribibles por cualquier UID.
+    user: "${AMTA_UID:-1000}:${AMTA_GID:-1000}"
+    # UN solo worker a proposito. Hay una sola GPU: mas workers no procesan mas
+    # rapido, se pelean la VRAM y ademas arruinan la medicion de ms/frame, que es
+    # uno de los entregables. La concurrencia se resuelve con la cola de jobs,
+    # que es visible en el campo `status`.
+    command: ["uvicorn", "core.api.main:app", "--host", "0.0.0.0", "--port", "8000",
+              "--workers", "1"]

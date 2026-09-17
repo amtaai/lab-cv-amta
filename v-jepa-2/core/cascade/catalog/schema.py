@@ -66,6 +66,16 @@ class ClipMeta:
     notes: str = ""
     meta: dict = field(default_factory=dict)
 
+    @property
+    def es_comercial(self) -> bool:
+        """Si el clip es un interior comercial de verdad.
+
+        Vive en el tipo y no en cada reporte: los dos preguntaban lo mismo con la
+        misma funcion copiada, y si el criterio cambia tiene que cambiar en un
+        solo lugar.
+        """
+        return self.location_type is not LocationType.OTHER
+
     def to_dict(self) -> dict:
         """Dict serializable a JSON (los enums salen como su string)."""
         d = asdict(self)

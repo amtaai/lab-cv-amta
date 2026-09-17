@@ -4,7 +4,7 @@ titulo, linea de protocolo, secciones y ## Veredicto al final.
 
 from __future__ import annotations
 
-from core.cascade.catalog.schema import ClipMeta, LocationType
+from core.cascade.catalog.schema import ClipMeta
 
 MIN_CLIPS_COMERCIALES = 60  # objetivo del corpus declarado en el plan de la semana
 # Por debajo de esta duracion mediana, el corpus es de segmentos curados y no de
@@ -15,15 +15,11 @@ DURACION_CONTINUA_MIN_S = 60.0
 UMBRAL_ESCENA_VACIA_PCT = 10.0
 
 
-def _es_comercial(c: ClipMeta) -> bool:
-    return c.location_type is not LocationType.OTHER
-
-
 def construir_reporte(stats_por_clip: list, clips: list[ClipMeta],
                       resumen_costo: dict, cfg) -> str:
     """Devuelve el markdown del reporte de Nivel 1."""
     por_id = {c.clip_id: c for c in clips}
-    comerciales = [s for s in stats_por_clip if _es_comercial(por_id[s.clip_id])]
+    comerciales = [s for s in stats_por_clip if por_id[s.clip_id].es_comercial]
     n_com = len(comerciales)
 
     lineas: list[str] = []

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "n_clips": 182,
+  "n_clips": 185,
   "clips": [
     {
       "clip_id": "normal_normal-1",
@@ -2340,6 +2340,81 @@
         "lighting": "bright",
         "frac_quemado_pct": 0.006,
         "frac_oscuro_pct": 4.893
+      }
+    },
+    {
+      "clip_id": "retail_iprox_caja",
+      "filename": "retail_iprox_caja.mp4",
+      "source": "cctv_demo_retail",
+      "camera_height": "ceiling",
+      "lighting": "dim",
+      "crowd_density": "sparse",
+      "location_type": "checkout",
+      "duration_s": 85.97,
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "codec": "h264",
+      "n_frames": 2576,
+      "sha256": "cca49c4d8c4e082e1f857a9da410435e7d3c0c7b011228a9cc7aff756f57ebc6",
+      "license": "unknown-verificar",
+      "notes": "Zona de CAJA de una tienda: cajero, terminal de pago, exhibidor junto a la registradora. CCTV cenital 720p, 86s. Marca de agua iProx, timestamp 2013. Licencia SIN verificar.",
+      "meta": {
+        "luma_media": 94.76,
+        "frac_quemado_pct": 1.584,
+        "frac_oscuro_pct": 11.892,
+        "n_frames_muestreados": 11,
+        "lighting": "dim"
+      }
+    },
+    {
+      "clip_id": "retail_iprox_tienda",
+      "filename": "retail_iprox_tienda.mp4",
+      "source": "cctv_demo_retail",
+      "camera_height": "ceiling",
+      "lighting": "mixed",
+      "crowd_density": "busy",
+      "location_type": "store",
+      "duration_s": 111.068,
+      "width": 1270,
+      "height": 720,
+      "fps": 13.093,
+      "codec": "h264",
+      "n_frames": 1452,
+      "sha256": "9ce4a653975da96786a4d162b4447ba5a957e70067d8f36927f3bca45a1dc973",
+      "license": "unknown-verificar",
+      "notes": "Tienda real con mucha gente (6-10 por frame, canastos de compra). CCTV cenital gran angular 720p, 111s. Marca de agua iProx y timestamp 2017. Licencia SIN verificar.",
+      "meta": {
+        "luma_media": 117.59,
+        "frac_quemado_pct": 5.524,
+        "frac_oscuro_pct": 3.476,
+        "n_frames_muestreados": 11,
+        "lighting": "mixed"
+      }
+    },
+    {
+      "clip_id": "retail_usa_tienda",
+      "filename": "retail_usa_tienda.mp4",
+      "source": "cctv_demo_retail",
+      "camera_height": "ceiling",
+      "lighting": "dim",
+      "crowd_density": "busy",
+      "location_type": "store",
+      "duration_s": 60.428,
+      "width": 1280,
+      "height": 720,
+      "fps": 30.0,
+      "codec": "h264",
+      "n_frames": 1810,
+      "sha256": "f72653cb60007cad9dd23c18155d15d930f259e69916af1065fdf06dd3fbd06f",
+      "license": "unknown-verificar",
+      "notes": "Tienda de conveniencia real (heladeras de bebidas, gondolas, cafetera). CCTV cenital 720p, 60s continuos. Verificado mirando los frames: 5 personas incl. staff. Licencia SIN verificar: es material promocional de un proveedor de CCTV.",
+      "meta": {
+        "luma_media": 88.71,
+        "frac_quemado_pct": 3.296,
+        "frac_oscuro_pct": 23.499,
+        "n_frames_muestreados": 11,
+        "lighting": "dim"
       }
     },
     {
