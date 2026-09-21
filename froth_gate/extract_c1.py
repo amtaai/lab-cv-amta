@@ -23,8 +23,8 @@ from skimage.filters import gaussian, sobel
 from skimage.registration import phase_cross_correlation
 from skimage.segmentation import watershed
 
-IEEE_DIR = Path(r"C:\amta-lab-cv\data_froth\IEEE\Dataset_ _Flotation Froth Sequence Images_")
-OUT_DIR = Path(r"C:\amta-lab-cv\froth_gate\results")
+IEEE_DIR = Path(r"D:\08_AMTA_BRAIN\amta-lab-cv\data_froth\IEEE\Dataset_ _Flotation Froth Sequence Images_")
+OUT_DIR = Path(r"D:\08_AMTA_BRAIN\amta-lab-cv\froth_gate\results")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 GLCM_DISTANCES = [1, 4]
