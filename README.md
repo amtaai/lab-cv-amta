@@ -197,5 +197,5 @@ medida; lo que falta es la mitad de datos.
 
 ## Repo
 
-- [ ] Activar branch protection sobre `main` (requerir PR) para que la restricción sea
-      técnica y no solo de disciplina.
+- `main` tiene branch protection: solo se actualiza mergeando un PR desde `dev/*`
+  (sin push directo, ni siquiera de admins; sin force push ni borrado).
