@@ -1,0 +1,442 @@
+{
+  "title": "AMTA Vision Analytics",
+  "subtitle": "De un prompt sobre una cámara a datos en el tiempo para EDA y ML",
+  "updated": "2026-09-28",
+  "idea": "Das un prompt en lenguaje natural sobre una cámara (\"personas que entran a la tienda A\"). El sistema detecta y sigue esos objetos, convierte el seguimiento en eventos (entró, salió, permaneció, cuántos hay) y los acumula como series temporales por zona y ventana de tiempo. El producto no son las máscaras: son los datos que salen de ellas, listos para EDA y modelos de ML.",
+  "docs": [
+    {
+      "label": "Norte y contrato de datos",
+      "path": "../norte.md"
+    },
+    {
+      "label": "Prior art (Meta, NVIDIA, Google…)",
+      "path": "../prior_art_norte.md"
+    },
+    {
+      "label": "Cascada de detección (Alex)",
+      "path": "../../v-jepa-2/README_cascade.md"
+    },
+    {
+      "label": "README del lab",
+      "path": "../../README.md"
+    }
+  ],
+  "sections": [
+    {
+      "id": "percepcion",
+      "title": "Percepción base",
+      "label": "Ver y seguir",
+      "status": "done",
+      "desc": "La cascada de vigilancia ya funciona y está medida (semanas 1–2 de Alex, integrada el 2026-09-28). Resuelve el 'ver': detectar personas, darles identidad estable y contarlas por cruce de línea.",
+      "right": [
+        {
+          "t": "N1 filtro de movimiento",
+          "s": "done",
+          "d": "MOG2 + guarda de flicker + warmup. Descarta los frames sin actividad antes de gastar GPU. `core/cascade/stage1_motion/`."
+        },
+        {
+          "t": "N2 detección de personas",
+          "s": "done",
+          "d": "YOLO11-seg (clases COCO) por defecto; YOLO-World open-vocab con AMTA_DETECTOR=yoloworld. `core/perception/detector.py`."
+        },
+        {
+          "t": "Tracking ByteTrack",
+          "s": "done",
+          "d": "Corre dentro del predictor de ultralytics. El registro de tracks exige min_hits antes de contar a alguien. `core/perception/tracker.py`."
+        },
+        {
+          "t": "N3 ReID (DINOv2)",
+          "s": "done",
+          "d": "Reengancha los IDs que una oclusión partió. Similitud coseno, calibrada. `core/perception/reid.py`."
+        },
+        {
+          "t": "Conteo por línea",
+          "s": "done",
+          "d": "Entradas, salidas y personas únicas por clip, sobre ultralytics.solutions.ObjectCounter. `core/perception/conteo.py`."
+        }
+      ],
+      "left": [
+        {
+          "t": "Evaluación P/R/F1",
+          "s": "done",
+          "d": "GT etiquetado a mano, barrido de umbrales y análisis de errores. `core/cascade/eval/`."
+        },
+        {
+          "t": "Medidor de costo",
+          "s": "done",
+          "d": "CPU y GPU por etapa, por separado, en SQLite. Responde cuánto cuesta por mes una cámara. `core/cascade/cost/`."
+        },
+        {
+          "t": "API REST + Docker",
+          "s": "done",
+          "d": "FastAPI con jobs de clip/archivo/RTSP/upload y simulador RTSP (mediamtx). `core/api/`, `docker/`."
+        },
+        {
+          "t": "Tests de la cascada",
+          "s": "done",
+          "d": "15 archivos en `tests/cascade/`: los primeros del repo."
+        }
+      ]
+    },
+    {
+      "id": "consolidar",
+      "title": "Consolidar el repo",
+      "label": "Cerrar la integración",
+      "status": "doing",
+      "desc": "Dejar una sola base estable sobre la que trabaje todo el equipo antes de construir la capa de datos.",
+      "right": [
+        {
+          "t": "Merge de dev/alex y dev/dorian",
+          "s": "done",
+          "d": "Integradas y llevadas a main por fast-forward (cd3befc)."
+        },
+        {
+          "t": "Branch protection en main",
+          "s": "done",
+          "d": "PR obligatorio, también para admins; sin force push ni borrado."
+        },
+        {
+          "t": "Correr tests tras el merge",
+          "s": "todo",
+          "d": "`docker compose run --rm cascade python -m pytest tests/cascade -v`. main hoy tiene código no re-testeado tras el merge."
+        },
+        {
+          "t": "Avisar al equipo",
+          "s": "todo",
+          "d": "Alex, Dorian y Daniel López: las ramas nuevas salen de dev/daniel-v-jepa-2."
+        },
+        {
+          "t": "Renombrar v-jepa-2/",
+          "s": "todo",
+          "d": "Hoy aloja la plataforma, no solo V-JEPA. Decidirlo con Alex porque rompe rutas de Docker."
+        }
+      ]
+    },
+    {
+      "id": "l1",
+      "title": "L1 · Detecciones con contexto",
+      "label": "Contrato de datos",
+      "status": "todo",
+      "desc": "Primera capa del contrato de datos: una fila por objeto por frame analizado, con todo lo necesario para reconstruir el tiempo y reproducir el resultado. Hoy detecciones.csv no tiene ni tiempo absoluto, ni cámara, ni prompt.",
+      "right": [
+        {
+          "t": "camara_id",
+          "s": "todo",
+          "d": "Identidad estable de la fuente."
+        },
+        {
+          "t": "ts absoluto (UTC)",
+          "s": "todo",
+          "d": "Timestamp real, no índice de frame. Es la columna que convierte detecciones en series."
+        },
+        {
+          "t": "prompt",
+          "s": "todo",
+          "d": "El concepto que produjo la detección."
+        },
+        {
+          "t": "modelo + versión",
+          "s": "todo",
+          "d": "Backend y versión, para poder reproducir el resultado."
+        },
+        {
+          "t": "Coords normalizadas [0,1]",
+          "s": "todo",
+          "d": "El corpus mezcla 640×480 y 1920×1080; en píxeles no son comparables."
+        }
+      ],
+      "left": [
+        {
+          "t": "Esquema versionado",
+          "s": "todo",
+          "k": "tool",
+          "d": "Pydantic (API) + esquema pyarrow (almacenamiento), con un único origen de verdad."
+        }
+      ]
+    },
+    {
+      "id": "l2",
+      "title": "L2 · Zonas y eventos",
+      "label": "De tracks a hechos",
+      "status": "todo",
+      "desc": "Una fila por hecho con significado, con timestamp. La taxonomía no se inventa: se adopta la de Google Occupancy Analytics, NVIDIA VSS Behavior Analytics y Roboflow supervision (ver prior_art_norte.md).",
+      "right": [
+        {
+          "t": "line_crossing (con dirección)",
+          "s": "todo",
+          "d": "Cruce de una línea con nombre, con sentido entrada o salida."
+        },
+        {
+          "t": "zone_entry / zone_exit",
+          "s": "todo",
+          "d": "Entrada y salida de un polígono con nombre."
+        },
+        {
+          "t": "dwell",
+          "s": "todo",
+          "d": "Permanencia en una zona por encima de un umbral, en segundos."
+        },
+        {
+          "t": "occupancy",
+          "s": "todo",
+          "d": "Cuántos objetos hay en la zona en cada instante."
+        }
+      ],
+      "left": [
+        {
+          "t": "Zonas con nombre por cámara",
+          "s": "todo",
+          "d": "Polígonos y líneas con zona_id (\"tienda_A_puerta\"), en config y en la petición de la API. Hoy hay una sola línea por defecto (x=0.35)."
+        },
+        {
+          "t": "supervision PolygonZone / LineZone",
+          "s": "todo",
+          "k": "tool",
+          "d": "Primitivas ya probadas para zonas, cruces y time-in-zone."
+        }
+      ]
+    },
+    {
+      "id": "l3",
+      "title": "L3 · Agregados y persistencia",
+      "label": "Series en el tiempo",
+      "status": "todo",
+      "desc": "Una fila por ventana de tiempo: es lo que responde \"el promedio de personas que entran a la tienda A por hora\". Se guarda en un formato que sirva directo para EDA.",
+      "right": [
+        {
+          "t": "Ventanas 1 min / 15 min / 1 h / 1 día",
+          "s": "todo",
+          "d": "entradas, salidas, ocupacion_media, ocupacion_max, permanencia_media y n_tracks por camara, zona y prompt."
+        },
+        {
+          "t": "Endpoints L1/L2/L3 en la API",
+          "s": "todo",
+          "d": "Exponer las tres capas por job y por rango de tiempo."
+        },
+        {
+          "t": "Jobs persistentes",
+          "s": "todo",
+          "d": "Hoy el estado de los jobs vive en memoria y se pierde al reiniciar."
+        }
+      ],
+      "left": [
+        {
+          "t": "Parquet particionado",
+          "s": "todo",
+          "k": "tool",
+          "d": "Partición por camara_id y fecha. Formato de intercambio para EDA."
+        },
+        {
+          "t": "DuckDB",
+          "s": "todo",
+          "k": "tool",
+          "d": "Consultas SQL directas sobre el Parquet, sin servidor."
+        },
+        {
+          "t": "TimescaleDB (luego)",
+          "s": "todo",
+          "k": "tool",
+          "d": "Para streams continuos 24/7, a mediano plazo."
+        }
+      ]
+    },
+    {
+      "id": "prompt",
+      "title": "Prompt de punta a punta",
+      "label": "Open-vocabulary real",
+      "status": "todo",
+      "desc": "Que el prompt de la petición gobierne la detección. Hoy el default (YOLO11) tiene clases fijas y solo YOLO-World usa prompts.",
+      "right": [
+        {
+          "t": "YOLO-World por defecto",
+          "s": "todo",
+          "k": "tool",
+          "d": "Ya integrado, open-vocab y rápido. Candidato a default para tiempo real."
+        },
+        {
+          "t": "Grounding DINO",
+          "s": "todo",
+          "k": "tool",
+          "d": "Hay banco de prueba en sam2_ov_grounded/. Más preciso y más caro."
+        },
+        {
+          "t": "SAM 3.1 (Meta)",
+          "s": "todo",
+          "k": "tool",
+          "d": "Detecta, segmenta y sigue desde texto en un solo modelo. Riesgo: ~17,7 GB con 5 objetos en H100, así que probablemente no entra en una T4 ni en la RTX 2060."
+        }
+      ],
+      "left": [
+        {
+          "t": "Gate de hardware SAM 3.1",
+          "s": "todo",
+          "d": "Medir VRAM y fps en T4 y RTX 2060 antes de integrarlo. Si no entra: L4/A100 offline o SAM 3 solo para refinar/etiquetar."
+        },
+        {
+          "t": "Comparar backends por calidad del conteo",
+          "s": "todo",
+          "d": "Tabla P/R/F1 del conteo, ms/frame, VRAM y USD/mes. La métrica es el conteo (L2), no la máscara."
+        },
+        {
+          "t": "Revisar SAM License",
+          "s": "todo",
+          "d": "No es Apache/MIT: restringe usos militares/ITAR y tiene cláusula de terminación por litigio de patentes."
+        }
+      ]
+    },
+    {
+      "id": "evaluacion",
+      "title": "Evaluación de los datos",
+      "label": "¿Los números son ciertos?",
+      "status": "todo",
+      "desc": "Medir la calidad del dato agregado, no solo de la detección. Un buen F1 por frame puede dar un mal conteo por hora.",
+      "right": [
+        {
+          "t": "Error de agregación por ventana",
+          "s": "todo",
+          "d": "MAPE/MPAE del conteo por ventana contra el GT, estilo LAVA (ACM MM 2025)."
+        },
+        {
+          "t": "GT de conteo por ventana",
+          "s": "todo",
+          "d": "Conteos manuales por intervalo sobre clips largos."
+        },
+        {
+          "t": "Costo USD/mes por cámara",
+          "s": "todo",
+          "d": "Extender el medidor existente al pipeline completo con L2/L3."
+        }
+      ]
+    },
+    {
+      "id": "corpus",
+      "title": "Corpus de largo plazo",
+      "label": "Datos que duren",
+      "status": "todo",
+      "desc": "Las series temporales piden horas o días de una misma cámara. Los clips actuales son cortos.",
+      "right": [
+        {
+          "t": "Video largo con licencia",
+          "s": "todo",
+          "d": "Conseguir o grabar horas/días de una misma escena, con licencia verificada y manifest."
+        },
+        {
+          "t": "Simulador RTSP 24/7",
+          "s": "todo",
+          "k": "tool",
+          "d": "Reutilizar mediamtx + publisher para simular una cámara continua."
+        }
+      ]
+    },
+    {
+      "id": "eda",
+      "title": "EDA y ML",
+      "label": "El valor",
+      "status": "todo",
+      "desc": "El primer consumidor del contrato de datos. Si el EDA no sale fácil con L3, el contrato está mal.",
+      "right": [
+        {
+          "t": "Notebook de EDA",
+          "s": "todo",
+          "d": "Distribuciones, picos, estacionalidad diaria y semanal, comparación entre zonas."
+        },
+        {
+          "t": "Baseline de pronóstico",
+          "s": "todo",
+          "d": "Seasonal naive primero; luego modelos de gradiente/Prophet. Sin baseline no hay mejora medible."
+        },
+        {
+          "t": "Detección de anomalías",
+          "s": "todo",
+          "d": "Afluencia inusual por zona y hora."
+        }
+      ],
+      "left": [
+        {
+          "t": "Dashboard",
+          "s": "todo",
+          "k": "tool",
+          "d": "Vista de series por cámara/zona sobre DuckDB."
+        }
+      ]
+    },
+    {
+      "id": "nl",
+      "title": "Preguntas en lenguaje natural",
+      "label": "Largo plazo",
+      "status": "todo",
+      "desc": "Preguntarle a los datos en español: \"¿a qué hora entra más gente a la tienda A los sábados?\"",
+      "right": [
+        {
+          "t": "Text-to-SQL sobre L3",
+          "s": "todo",
+          "d": "Un LLM traduce la pregunta a SQL sobre DuckDB."
+        },
+        {
+          "t": "Agente con herramientas (MCP)",
+          "s": "todo",
+          "d": "Estilo NVIDIA VSS: el agente consulta datos, eventos y video."
+        },
+        {
+          "t": "Eventos compuestos",
+          "s": "todo",
+          "d": "\"Entra y se queda más de 30 s\": consultas compuestas estilo VOCAL (UW)."
+        }
+      ]
+    },
+    {
+      "id": "lazo",
+      "title": "Lazo de auto-corrección",
+      "label": "Largo plazo",
+      "status": "todo",
+      "desc": "Que el prompt se afine solo por cámara sin re-etiquetado humano constante. El scaffold existe en v-jepa-2/core/ (stubs).",
+      "right": [
+        {
+          "t": "VLM verificador",
+          "s": "todo",
+          "d": "Florence-2 / InternVL / SAM 3 Agent verifican las detecciones dudosas."
+        },
+        {
+          "t": "Pseudo-labels + guardrails",
+          "s": "todo",
+          "d": "Umbrales en LoopThresholds; confirmation bias como amenaza principal."
+        },
+        {
+          "t": "Drift monitor",
+          "s": "todo",
+          "d": "Vigilancia del sesgo y muestreo para revisión humana."
+        },
+        {
+          "t": "Destilación",
+          "s": "todo",
+          "d": "Modelo compacto por cámara para inferencia barata."
+        },
+        {
+          "t": "V-JEPA 2.1 para eventos ricos",
+          "s": "todo",
+          "k": "tool",
+          "d": "Features de movimiento/novedad. El smoke test ya está validado en T4 (410 ms / 0,7 GB)."
+        }
+      ]
+    },
+    {
+      "id": "froth",
+      "title": "Línea froth",
+      "label": "En pausa",
+      "status": "paused",
+      "desc": "En pausa por decisión de Daniel (2026-09-28). Encaja en el mismo norte (burbujas → eventos → series): la capa de datos le servirá cuando se retome.",
+      "right": [
+        {
+          "t": "GATE C1 geométrico",
+          "s": "done",
+          "d": "F1 macro 91,91 ± 0,54."
+        },
+        {
+          "t": "C2 DINOv3 / C3 V-JEPA 2.1",
+          "s": "paused",
+          "d": "C2 bloqueado por acceso gated; C3 sin correr."
+        }
+      ]
+    }
+  ]
+}
