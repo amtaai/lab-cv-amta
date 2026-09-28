@@ -1,15 +1,29 @@
-"""Genera roadmap.html (estilo roadmap.sh) a partir de roadmap.json.
+"""Genera roadmaps HTML (estilo roadmap.sh) a partir de archivos JSON.
 
-Uso:  python docs/roadmap/build_roadmap.py
-Solo biblioteca estandar (Python >= 3.8). Editar roadmap.json y regenerar.
+Uso:
+    python docs/roadmap/build_roadmap.py                      # roadmap.json -> roadmap.html
+    python docs/roadmap/build_roadmap.py onboarding_taba.json # -> onboarding_taba.html
+    python docs/roadmap/build_roadmap.py --all                # todos los *.json de la carpeta
+
+Solo biblioteca estandar (Python >= 3.8). Editar el JSON y regenerar.
+
+Formato del JSON (todo opcional salvo title y sections):
+- sections[]: {id, title, label, status, desc, right[], left[]}
+  - items: {t, s (todo|doing|done|paused), d, k ("tool"), r[]}
+  - r[] (recursos del nodo): {l, u, tipo (paper|doc|repo|curso|interno|video)}
+- extras[]: secciones HTML bajo el mapa, por tipo:
+  checklist {items[{t,d}]} · steps {items[{t,d,code}]} · glossary {items[{term,def}]}
+  team {items[{name,role,d}]} · rules {items[str]} · faq {items[{q,a}]}
+  references {groups[{title, items[{cite,url,v (ok|abs|web)}]}]} · text {body}
+Los textos aceptan `code`, **negrita**, *cursiva* y [enlaces](url).
 """
 import html
 import json
+import re
+import sys
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
-ENTRADA = AQUI / "roadmap.json"
-SALIDA = AQUI / "roadmap.html"
 
 # ---- geometria ----
 ANCHO = 1180
@@ -45,6 +59,20 @@ def alto(lineas):
 
 def esc(s):
     return html.escape(s, quote=True)
+
+
+def md(s):
+    """Markdown minimo: escapa y luego aplica `code`, **negrita** y [texto](url)."""
+    s = esc(s or "")
+    s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+    s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
+    s = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", s)
+    s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2" target="_blank" rel="noopener">\1</a>', s)
+    return s
+
+
+def recursos(lista):
+    return [{"l": r["l"], "u": r["u"], "tipo": r.get("tipo", "doc")} for r in (lista or [])]
 
 
 def nodo_svg(nid, x, y, w, lineas, clase, tipo):
@@ -90,7 +118,8 @@ def construir(datos):
 
         svg, _ = nodo_svg(sec["id"], main_x, main_y, MAIN_W, main_lineas, "principal", estado)
         partes.append(svg)
-        nodos_info[sec["id"]] = {"t": sec["title"], "s": estado, "d": sec.get("desc", ""), "k": "section"}
+        nodos_info[sec["id"]] = {"t": sec["title"], "s": estado, "d": md(sec.get("desc", "")),
+                                 "k": "section", "r": recursos(sec.get("r"))}
         eje.append((main_y, main_y + main_h))
 
         for lado, (items, bloques, alto_lado) in lados.items():
@@ -105,8 +134,9 @@ def construir(datos):
                 tipo = "herramienta" if it.get("k") == "tool" else "sub"
                 svg, h = nodo_svg(nid, x, yy, SUB_W, lineas, tipo, it.get("s", "todo"))
                 partes.append(svg)
-                nodos_info[nid] = {"t": it["t"], "s": it.get("s", "todo"), "d": it.get("d", ""),
-                                   "k": it.get("k", "topic"), "sec": sec["title"]}
+                nodos_info[nid] = {"t": it["t"], "s": it.get("s", "todo"), "d": md(it.get("d", "")),
+                                   "k": it.get("k", "topic"), "sec": sec["title"],
+                                   "r": recursos(it.get("r"))}
                 cy = yy + h / 2
                 dx = (borde_sub - borde_main) * 0.5
                 conectores.append(
@@ -175,6 +205,68 @@ def construir_cabecera(datos):
     ts = "".join(f'<tspan x="{ix + 18}" y="{80 + 19 * i}">{esc(l)}</tspan>' for i, l in enumerate(lineas))
     out.append(f'<text class="idea-t">{ts}</text>')
     return "".join(out)
+
+
+VERIF = {"ok": ("✓ verificado", "v-ok"), "abs": ("✓ abstract", "v-abs"), "web": ("✓ página oficial", "v-ok")}
+
+
+def extras_html(extras):
+    """Secciones bajo el mapa. Devuelve (html, [(id, titulo)] para la navegacion)."""
+    out, nav = [], []
+    for ex in extras or []:
+        eid, tit, tipo = ex["id"], ex["title"], ex["type"]
+        nav.append((eid, ex.get("nav", tit)))
+        cuerpo = []
+        if ex.get("intro"):
+            cuerpo.append(f'<p class="intro">{md(ex["intro"])}</p>')
+        if tipo == "checklist":
+            cuerpo.append('<ul class="checklist">')
+            for i, it in enumerate(ex["items"]):
+                cid = f"{eid}_{i}"
+                det = f'<div class="det">{md(it["d"])}</div>' if it.get("d") else ""
+                cuerpo.append(f'<li><label><input type="checkbox" data-ck="{cid}"> '
+                              f'<span>{md(it["t"])}</span></label>{det}</li>')
+            cuerpo.append("</ul>")
+        elif tipo == "steps":
+            cuerpo.append('<ol class="pasos">')
+            for it in ex["items"]:
+                code = ""
+                if it.get("code"):
+                    code = (f'<div class="code"><button class="copiar" type="button">copiar</button>'
+                            f'<pre><code>{esc(it["code"])}</code></pre></div>')
+                cuerpo.append(f'<li><strong>{md(it["t"])}</strong>'
+                              f'{"<p>" + md(it["d"]) + "</p>" if it.get("d") else ""}{code}</li>')
+            cuerpo.append("</ol>")
+        elif tipo == "glossary":
+            cuerpo.append('<dl class="glosario">')
+            for it in ex["items"]:
+                cuerpo.append(f'<div><dt>{md(it["term"])}</dt><dd>{md(it["def"])}</dd></div>')
+            cuerpo.append("</dl>")
+        elif tipo == "team":
+            cuerpo.append('<div class="equipo">')
+            for it in ex["items"]:
+                cuerpo.append(f'<div class="persona"><div class="nombre">{md(it["name"])}</div>'
+                              f'<div class="rol">{md(it["role"])}</div>'
+                              f'{"<p>" + md(it["d"]) + "</p>" if it.get("d") else ""}</div>')
+            cuerpo.append("</div>")
+        elif tipo == "rules":
+            cuerpo.append('<ul class="reglas">' + "".join(f"<li>{md(r)}</li>" for r in ex["items"]) + "</ul>")
+        elif tipo == "faq":
+            for it in ex["items"]:
+                cuerpo.append(f'<details class="faq"><summary>{md(it["q"])}</summary><p>{md(it["a"])}</p></details>')
+        elif tipo == "references":
+            for g in ex["groups"]:
+                cuerpo.append(f'<h3>{md(g["title"])}</h3><ol class="refs">')
+                for it in g["items"]:
+                    etq, cls = VERIF.get(it.get("v", ""), ("", ""))
+                    badge = f' <span class="badge {cls}">{etq}</span>' if etq else ""
+                    enlace = f' <a href="{esc(it["url"])}" target="_blank" rel="noopener">{esc(it["url"])}</a>' if it.get("url") else ""
+                    cuerpo.append(f'<li>{md(it["cite"])}{enlace}{badge}</li>')
+                cuerpo.append("</ol>")
+        elif tipo == "text":
+            cuerpo.append("".join(f"<p>{md(p)}</p>" for p in ex["body"]))
+        out.append(f'<section class="extra" id="{eid}"><h2>{md(tit)}</h2>{"".join(cuerpo)}</section>')
+    return "".join(out), nav
 
 
 PLANTILLA = """<!doctype html>
@@ -253,6 +345,55 @@ aside .cerrar { position: absolute; top: 12px; right: 14px; border: 0; backgroun
   padding: 6px 10px; background: #fff; cursor: pointer; }
 .estados button.activo { background: #000; color: #fff; }
 .nota { font-size: 12px; color: var(--suave); margin-top: 18px; }
+aside a { color: var(--azul); }
+.recursos { margin-top: 18px; } .recursos h3 { font-size: 15px; margin: 0 0 8px; }
+.recursos ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.recursos li a { display: flex; gap: 8px; align-items: baseline; text-decoration: none; color: #000;
+  border: 2px solid #000; border-radius: 6px; padding: 6px 8px; font-size: 14px; }
+.recursos li a:hover { background: var(--beige); }
+.tipo { font-size: 11px; text-transform: uppercase; border-radius: 4px; padding: 1px 6px;
+  background: #000; color: #fff; flex: none; }
+.tipo.paper { background: #7c3aed; } .tipo.repo { background: #111; } .tipo.doc { background: var(--azul); }
+.tipo.curso { background: #059669; } .tipo.interno { background: #b45309; } .tipo.video { background: #dc2626; }
+nav.secciones { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; }
+nav.secciones a { font-size: 14px; color: #000; text-decoration: none; border: 2px solid #000;
+  border-radius: 999px; padding: 2px 10px; background: #fff; }
+nav.secciones a:hover { background: var(--amarillo); }
+.extras { max-width: 980px; margin: 0 auto; padding: 0 16px 80px; }
+.extra { border: 2.5px solid #000; border-radius: 8px; padding: 18px 22px; margin: 26px 0;
+  background: #fff; scroll-margin-top: 110px; }
+.extra h2 { margin: 0 0 10px; font-size: 24px; } .extra h3 { margin: 18px 0 8px; font-size: 17px; }
+.extra p, .extra li, .extra dd { line-height: 1.55; font-size: 15px; }
+.extra code, .det code { background: #f2f2f2; padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+.extra a { color: var(--azul); word-break: break-word; }
+.intro { color: var(--suave); }
+.checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.checklist li { border: 2px solid #000; border-radius: 6px; padding: 8px 12px; background: var(--beige); }
+.checklist label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 15px; }
+.checklist input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--ok); flex: none; }
+.checklist li.hecho { background: var(--hecho); } .checklist li.hecho span { text-decoration: line-through; color: #555; }
+.checklist .det { margin: 4px 0 0 28px; font-size: 13.5px; color: #333; }
+.pasos { padding-left: 22px; } .pasos li { margin-bottom: 14px; } .pasos p { margin: 4px 0; }
+.code { position: relative; margin-top: 6px; }
+.code pre { background: #111; color: #f5f5f5; border-radius: 6px; padding: 12px 14px; overflow-x: auto;
+  margin: 0; font-size: 13px; line-height: 1.5; }
+.code pre code { background: none; color: inherit; padding: 0; font-family: ui-monospace, Consolas, monospace; }
+.copiar { position: absolute; top: 6px; right: 6px; font: inherit; font-size: 12px; border: 1px solid #fff;
+  background: #333; color: #fff; border-radius: 4px; padding: 2px 8px; cursor: pointer; }
+.glosario { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin: 0; }
+.glosario div { border: 2px solid #000; border-radius: 6px; padding: 8px 12px; }
+.glosario dt { font-weight: 700; } .glosario dd { margin: 4px 0 0; font-size: 14px; }
+.equipo { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.persona { border: 2px solid #000; border-radius: 6px; padding: 10px 12px; background: var(--beige); }
+.persona .nombre { font-weight: 700; font-size: 16px; } .persona .rol { font-size: 13px; color: #333; }
+.persona p { font-size: 14px; margin: 6px 0 0; }
+.reglas { padding-left: 20px; } .reglas li { margin-bottom: 6px; }
+.faq { border: 2px solid #000; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; }
+.faq summary { cursor: pointer; font-weight: 700; } .faq p { margin: 8px 0 2px; }
+.refs li { margin-bottom: 7px; font-size: 14px; }
+.badge { font-size: 11px; border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.v-ok { background: #dcfce7; color: #166534; border: 1px solid #16a34a; }
+.v-abs { background: #fef9c3; color: #854d0e; border: 1px solid #ca8a04; }
 </style>
 </head>
 <body>
@@ -264,25 +405,28 @@ aside .cerrar { position: absolute; top: 12px; right: 14px; border: 0; backgroun
     <span style="--c:#fff;border-color:#f59e0b">En curso</span><span style="--c:#eeeeee">En pausa</span>
   </div>
   <div class="progreso"><div class="barra"><i id="barra"></i></div><span id="pct"></span></div>
+  __NAV__
 </header>
-<main>__SVG__</main>
+<main id="mapa-sec">__SVG__</main>
+<div class="extras">__EXTRAS__</div>
 <aside id="panel" aria-live="polite">
   <button class="cerrar" aria-label="Cerrar">×</button>
   <div class="sec" id="p-sec"></div>
   <h2 id="p-t"></h2>
   <p id="p-d"></p>
+  <div class="recursos" id="p-r"></div>
   <div class="estados">
     <button data-s="todo">Pendiente</button><button data-s="doing">En curso</button>
     <button data-s="done">Hecho</button><button data-s="paused">En pausa</button>
     <button data-s="">Restablecer</button>
   </div>
   <div class="nota">El estado marcado aquí se guarda solo en este navegador. La fuente de verdad es
-  <code>docs/roadmap/roadmap.json</code>: edítalo y regenera con
-  <code>python docs/roadmap/build_roadmap.py</code>.</div>
+  <code>docs/roadmap/__FUENTE__</code>: edítalo y regenera con
+  <code>python docs/roadmap/build_roadmap.py __FUENTE__</code>.</div>
 </aside>
 <script>
 const NODOS = __NODOS__;
-const CLAVE = "amta-roadmap-estados";
+const CLAVE = "amta-roadmap-__CLAVE__";
 let override = {};
 try { override = JSON.parse(localStorage.getItem(CLAVE) || "{}"); } catch (e) { override = {}; }
 const ESTADOS = ["todo", "doing", "done", "paused"];
@@ -300,15 +444,24 @@ function pintar() {
 }
 const panel = document.getElementById("panel");
 let actual = null;
-function md(s) {
-  const d = document.createElement("div"); d.textContent = s;
-  return d.innerHTML.replace(/`([^`]+)`/g, "<code>$1</code>");
-}
+const TIPOS = {paper: "paper", doc: "doc", repo: "repo", curso: "curso", interno: "interno", video: "video"};
 function abrir(id) {
   actual = id; const n = NODOS[id];
   document.getElementById("p-sec").textContent = n.k === "section" ? "Fase" : (n.sec || "");
   document.getElementById("p-t").textContent = n.t;
-  document.getElementById("p-d").innerHTML = md(n.d || "Sin descripción.");
+  document.getElementById("p-d").innerHTML = n.d || "Sin descripción.";
+  const r = document.getElementById("p-r"); r.innerHTML = "";
+  if (n.r && n.r.length) {
+    const h = document.createElement("h3"); h.textContent = "Recursos"; r.appendChild(h);
+    const ul = document.createElement("ul");
+    n.r.forEach(x => {
+      const li = document.createElement("li"), a = document.createElement("a"), t = document.createElement("span");
+      a.href = x.u; a.target = "_blank"; a.rel = "noopener";
+      t.className = "tipo " + (TIPOS[x.tipo] || "doc"); t.textContent = x.tipo || "doc";
+      a.appendChild(t); a.appendChild(document.createTextNode(x.l)); li.appendChild(a); ul.appendChild(li);
+    });
+    r.appendChild(ul);
+  }
   panel.querySelectorAll(".estados button").forEach(b =>
     b.classList.toggle("activo", b.dataset.s === estadoDe(id)));
   panel.classList.add("abierto");
@@ -326,24 +479,62 @@ panel.querySelectorAll(".estados button").forEach(b => b.onclick = () => {
   pintar(); abrir(actual);
 });
 pintar();
+// checklists persistentes (solo en este navegador)
+const CLAVE_CK = CLAVE + "-checklist";
+let ck = {};
+try { ck = JSON.parse(localStorage.getItem(CLAVE_CK) || "{}"); } catch (e) { ck = {}; }
+document.querySelectorAll("input[data-ck]").forEach(inp => {
+  const li = inp.closest("li");
+  inp.checked = !!ck[inp.dataset.ck]; li.classList.toggle("hecho", inp.checked);
+  inp.addEventListener("change", () => {
+    ck[inp.dataset.ck] = inp.checked; li.classList.toggle("hecho", inp.checked);
+    try { localStorage.setItem(CLAVE_CK, JSON.stringify(ck)); } catch (e) {}
+  });
+});
+document.querySelectorAll(".copiar").forEach(b => b.addEventListener("click", () => {
+  const txt = b.parentElement.querySelector("code").textContent;
+  const ok = () => { b.textContent = "copiado"; setTimeout(() => b.textContent = "copiar", 1200); };
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok, () => {}); else ok();
+}));
 </script>
 </body>
 </html>
 """
 
 
-def main():
-    datos = json.loads(ENTRADA.read_text(encoding="utf-8"))
+def generar(entrada):
+    datos = json.loads(entrada.read_text(encoding="utf-8"))
     svg, nodos = construir(datos)
+    extras, nav = extras_html(datos.get("extras"))
+    nav_html = ""
+    if nav:
+        enlaces = [("mapa-sec", "Mapa")] + nav
+        nav_html = '<nav class="secciones">' + "".join(
+            f'<a href="#{i}">{esc(t)}</a>' for i, t in enlaces) + "</nav>"
+    salida_path = entrada.with_suffix(".html")
     salida = (
         PLANTILLA.replace("__TITULO__", esc(datos["title"]))
         .replace("__SUBTITULO__", esc(datos.get("subtitle", "")))
         .replace("__FECHA__", esc(datos.get("updated", "")))
+        .replace("__NAV__", nav_html)
         .replace("__SVG__", svg)
-        .replace("__NODOS__", json.dumps(nodos, ensure_ascii=False))
+        .replace("__EXTRAS__", extras)
+        .replace("__FUENTE__", entrada.name)
+        .replace("__CLAVE__", entrada.stem)
+        .replace("__NODOS__", json.dumps(nodos, ensure_ascii=False).replace("</", "<\\/"))
     )
-    SALIDA.write_text(salida, encoding="utf-8")
-    print(f"{SALIDA.name}: {len(nodos)} nodos, {len(salida) / 1024:.0f} KB")
+    salida_path.write_text(salida, encoding="utf-8")
+    print(f"{salida_path.name}: {len(nodos)} nodos, {len(nav)} secciones extra, {len(salida) / 1024:.0f} KB")
+
+
+def main():
+    args = sys.argv[1:]
+    if args == ["--all"]:
+        entradas = sorted(AQUI.glob("*.json"))
+    else:
+        entradas = [AQUI / (args[0] if args else "roadmap.json")]
+    for e in entradas:
+        generar(e)
 
 
 if __name__ == "__main__":
