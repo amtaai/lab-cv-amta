@@ -3,6 +3,7 @@
 > Documento rector de `lab-cv-amta` (desde 2026-09-28). Todo lo que se construya en el lab
 > se evalúa contra este norte. La línea froth queda **en pausa** (ver §6).
 > Trabajos similares (Meta, NVIDIA, Google, AWS, academia, open source): `docs/prior_art_norte.md`.
+> Roadmap visual: `docs/roadmap/roadmap.html` (fuente: `docs/roadmap/roadmap.json`).
 
 ## 1. Qué se quiere
 

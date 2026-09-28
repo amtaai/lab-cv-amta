@@ -18,7 +18,7 @@ YOLO-World, DINOv3) y la línea de caracterización de **froth de flotación**, 
 | Carpeta | Qué hay |
 |---|---|
 | `dino_v3/`, `sam2_ov_florence_2/`, `sam2_ov_grounded/`, `yolo_seg/`, `yolo_world/` | Una carpeta por pipeline: notebook de prueba + repo upstream en `third_party/` (gitignoreado). Prefijos de autoría: `dnl_` = Daniel López, `drn_` = Dorian |
-| `docs/` | `norte.md` (documento rector) + documentación técnica de los modelos (DINOv3, Florence-2, SAM2, Grounding DINO, YOLO) |
+| `docs/` | `norte.md` (documento rector), `roadmap/` (roadmap estilo roadmap.sh: se edita `roadmap.json` y se regenera `roadmap.html` con `python docs/roadmap/build_roadmap.py`), `prior_art_norte.md` + documentación técnica de los modelos (DINOv3, Florence-2, SAM2, Grounding DINO, YOLO) |
 | `froth_gate/` | **En pausa.** Experimento GATE C1/C2/C3 sobre el dataset IEEE (ver su `README.md`) + pipelines A/B de Dorian |
 | `v-jepa-2/` | Plataforma: cascada de vigilancia (movimiento → detección por prompt → ByteTrack → ReID → conteo), evaluación, medición de costo, API FastAPI y tests (ver `v-jepa-2/README_cascade.md`). Aloja también el scaffold del lazo de auto-corrección y el smoke test de V-JEPA 2.1 |
 | `data_froth/`, `local_docs/`, `handoffs/` | Datos y documentación de trabajo — **no versionados** (ver `.gitignore`) |
