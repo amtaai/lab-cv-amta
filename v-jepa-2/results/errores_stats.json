@@ -1,0 +1,31 @@
+{
+  "falsos_positivos": 1,
+  "no_detectadas_detector": 0,
+  "no_detectadas_gate": 18,
+  "por_clip": {
+    "retail_iprox_caja": {
+      "ids_sin_reid": 28,
+      "ids_con_reid": 9,
+      "relevos_sin_reid": 7,
+      "relevos_con_reid": 0,
+      "tracks_con_oclusion": 8,
+      "reenganches": 24
+    },
+    "retail_iprox_tienda": {
+      "ids_sin_reid": 134,
+      "ids_con_reid": 26,
+      "relevos_sin_reid": 40,
+      "relevos_con_reid": 0,
+      "tracks_con_oclusion": 22,
+      "reenganches": 131
+    },
+    "retail_usa_tienda": {
+      "ids_sin_reid": 45,
+      "ids_con_reid": 12,
+      "relevos_sin_reid": 13,
+      "relevos_con_reid": 0,
+      "tracks_con_oclusion": 9,
+      "reenganches": 42
+    }
+  }
+}

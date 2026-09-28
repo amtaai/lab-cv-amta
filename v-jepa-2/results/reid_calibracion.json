@@ -1,0 +1,35 @@
+{
+  "modelo": "facebook/dinov2-small",
+  "n_pos": 600,
+  "n_neg": 600,
+  "clips": [
+    "retail_iprox_caja",
+    "retail_iprox_tienda",
+    "retail_usa_tienda"
+  ],
+  "semilla": 20260821,
+  "variantes": [
+    {
+      "variante": "recorte crudo",
+      "pos_media": 0.6761092107494672,
+      "neg_media": 0.3784573056300481,
+      "umbral": 0.5000000000000002,
+      "acierto": 0.8525,
+      "recupera_mismas": 0.8566666666666667,
+      "rechaza_distintas": 0.8483333333333334,
+      "pos_p10": 0.45149119198322296,
+      "neg_p90": 0.5311792612075806
+    },
+    {
+      "variante": "fondo borrado",
+      "pos_media": 0.6855631793042024,
+      "neg_media": 0.40727916431302824,
+      "umbral": 0.5600000000000003,
+      "acierto": 0.8533333333333334,
+      "recupera_mismas": 0.8033333333333333,
+      "rechaza_distintas": 0.9033333333333333,
+      "pos_p10": 0.4835339903831482,
+      "neg_p90": 0.55491082072258
+    }
+  ]
+}

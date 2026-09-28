@@ -1,0 +1,164 @@
+{
+  "protocolo": {
+    "backend": "yolo11",
+    "pesos": "(default del backend)",
+    "prompts": [
+      "person"
+    ],
+    "imgsz": 640,
+    "conf": 0.35,
+    "iou": 0.7,
+    "device": "0",
+    "tracker": "bytetrack.yaml",
+    "min_hits": 3,
+    "max_age": 30,
+    "linea_conteo": [
+      [
+        0.35,
+        0.0
+      ],
+      [
+        0.35,
+        1.0
+      ]
+    ],
+    "cv_num_threads": 1,
+    "min_area_frac": 0.0016,
+    "gate_activo": true,
+    "reid_activo": true,
+    "cpu_usd_per_hour": 0.0,
+    "gpu_usd_per_hour": 0.0
+  },
+  "n_clips": 3,
+  "t_total_s": 200.077,
+  "por_clip": [
+    {
+      "clip_id": "retail_iprox_caja",
+      "total_frames": 2576,
+      "warmup_frames": 30,
+      "frames_analizados": 2328,
+      "frames_descartados": 218,
+      "frames_con_persona": 2328,
+      "n_detecciones": 6930,
+      "n_personas_unicas": 10,
+      "max_personas_simultaneas": 5,
+      "entradas": 2,
+      "salidas": 1,
+      "contados_por_linea": 3,
+      "conf_media": 0.7704,
+      "cpu_ms_motion": 54873.756,
+      "gpu_ms_person": 24936.056,
+      "cpu_ms_tracking": 52.727,
+      "cpu_ms_conteo": 2141.599,
+      "gpu_ms_reid": 1443.367,
+      "n_reenganches": 24,
+      "wall_ms": 87696.217,
+      "meta": {},
+      "pct_analizado": 91.44,
+      "pct_frames_con_persona": 100.0,
+      "ms_por_frame_analizado": 10.711,
+      "fps_pipeline": 29.37
+    },
+    {
+      "clip_id": "retail_iprox_tienda",
+      "total_frames": 1452,
+      "warmup_frames": 30,
+      "frames_analizados": 1269,
+      "frames_descartados": 153,
+      "frames_con_persona": 1269,
+      "n_detecciones": 10074,
+      "n_personas_unicas": 28,
+      "max_personas_simultaneas": 13,
+      "entradas": 8,
+      "salidas": 7,
+      "contados_por_linea": 15,
+      "conf_media": 0.6163,
+      "cpu_ms_motion": 34265.695,
+      "gpu_ms_person": 14279.655,
+      "cpu_ms_tracking": 48.239,
+      "cpu_ms_conteo": 1844.239,
+      "gpu_ms_reid": 4493.976,
+      "n_reenganches": 129,
+      "wall_ms": 58261.899,
+      "meta": {},
+      "pct_analizado": 89.24,
+      "pct_frames_con_persona": 100.0,
+      "ms_por_frame_analizado": 11.253,
+      "fps_pipeline": 24.92
+    },
+    {
+      "clip_id": "retail_usa_tienda",
+      "total_frames": 1810,
+      "warmup_frames": 30,
+      "frames_analizados": 1368,
+      "frames_descartados": 412,
+      "frames_con_persona": 1368,
+      "n_detecciones": 4655,
+      "n_personas_unicas": 11,
+      "max_personas_simultaneas": 6,
+      "entradas": 2,
+      "salidas": 5,
+      "contados_por_linea": 7,
+      "conf_media": 0.6773,
+      "cpu_ms_motion": 34264.183,
+      "gpu_ms_person": 14592.451,
+      "cpu_ms_tracking": 31.783,
+      "cpu_ms_conteo": 1182.837,
+      "gpu_ms_reid": 1231.402,
+      "n_reenganches": 42,
+      "wall_ms": 54034.348,
+      "meta": {},
+      "pct_analizado": 76.85,
+      "pct_frames_con_persona": 100.0,
+      "ms_por_frame_analizado": 10.667,
+      "fps_pipeline": 33.5
+    }
+  ],
+  "costo_por_stage": {
+    "conteo": {
+      "n_eventos": 3,
+      "cpu_total_ms": 5168.675,
+      "cpu_medio_ms": 1722.8917,
+      "wall_total_ms": 0.0,
+      "cost_usd_total": 0.0,
+      "gpu_total_ms": 0.0,
+      "gpu_medio_ms": 0.0
+    },
+    "motion_detection": {
+      "n_eventos": 3,
+      "cpu_total_ms": 123403.634,
+      "cpu_medio_ms": 41134.5447,
+      "wall_total_ms": 199992.464,
+      "cost_usd_total": 0.0,
+      "gpu_total_ms": 0.0,
+      "gpu_medio_ms": 0.0
+    },
+    "person_detection": {
+      "n_eventos": 3,
+      "cpu_total_ms": 0.0,
+      "cpu_medio_ms": 0.0,
+      "wall_total_ms": 0.0,
+      "cost_usd_total": 0.0,
+      "gpu_total_ms": 53808.162,
+      "gpu_medio_ms": 17936.054
+    },
+    "reid": {
+      "n_eventos": 3,
+      "cpu_total_ms": 0.0,
+      "cpu_medio_ms": 0.0,
+      "wall_total_ms": 0.0,
+      "cost_usd_total": 0.0,
+      "gpu_total_ms": 7168.745,
+      "gpu_medio_ms": 2389.5817
+    },
+    "tracking": {
+      "n_eventos": 3,
+      "cpu_total_ms": 132.749,
+      "cpu_medio_ms": 44.2497,
+      "wall_total_ms": 0.0,
+      "cost_usd_total": 0.0,
+      "gpu_total_ms": 0.0,
+      "gpu_medio_ms": 0.0
+    }
+  }
+}

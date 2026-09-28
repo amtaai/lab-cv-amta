@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "_comment": "Zona de espera por clip, en coordenadas normalizadas [0,1]. Una ROI por camara: un rectangulo que sirve para una cae en cualquier lado en las demas, y el numero que sale no describe nada. Un clip sin ROI aca NO se evalua para filas, en vez de evaluarse mal. Se dibuja mirando el frame: `visualizar --clip <id>` y ubicar donde espera la gente.",
+  "clips": {
+    "retail_iprox_caja": {
+      "roi": [[0.52, 0.38], [0.98, 0.38], [0.98, 0.99], [0.52, 0.99]],
+      "nota": "Piso frente al mostrador, a la derecha de la caja: es donde para el cliente que esta siendo atendido y donde esperaria el siguiente. Excluye al cajero, que esta del otro lado y estaria quieto todo el turno."
+    },
+    "retail_iprox_tienda": {
+      "roi": [[0.10, 0.30], [0.62, 0.30], [0.62, 0.95], [0.10, 0.95]],
+      "nota": "Pasillo de los mostradores rojos. NO es una zona de caja: es area de circulacion, y se declara para tener el contraste de una zona donde la gente pasa en vez de esperar."
+    }
+  }
+}

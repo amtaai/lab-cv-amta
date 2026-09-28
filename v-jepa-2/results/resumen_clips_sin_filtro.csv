@@ -1,0 +1,4 @@
+clip_id,location_type,width,height,fps_video,frames_totales,frames_analizados,frames_descartados,pct_analizado,detecciones,personas_unicas,max_simultaneas,conf_media,entradas,salidas,cruzaron_linea,reenganches_reid,cpu_ms_motion,gpu_ms_person,cpu_ms_tracking,cpu_ms_conteo,gpu_ms_reid,wall_ms,fps_pipeline,cpu_ms_por_frame,gpu_ms_por_frame_analizado,costo_usd_cpu,costo_usd_gpu
+retail_iprox_caja,checkout,1280,720,30.0,2576,2576,0,100.0,7249,9,5,0.7726,2,1,3,25,55802.012,28153.106,59.009,2361.885,1552.122,92448.23,27.86,22.602,11.532,0.0,0.0
+retail_iprox_tienda,store,1270,720,13.093,1452,1452,0,100.0,11394,26,13,0.6226,9,7,16,130,35365.619,17179.04,59.674,2532.008,5315.921,64258.325,22.6,26.141,15.492,0.0,0.0
+retail_usa_tienda,store,1280,720,30.0,1810,1810,0,100.0,5914,13,6,0.668,3,4,7,48,35856.454,20627.813,45.44,1756.299,1703.738,63337.709,28.58,20.806,12.338,0.0,0.0
