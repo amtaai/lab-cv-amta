@@ -1,8 +1,8 @@
 {
-  "title": "Inducción · Taba",
+  "title": "Inducción · Tabata",
   "subtitle": "Tu camino para sumarte a AMTA Vision Analytics",
   "updated": "2026-09-28",
-  "idea": "¡Bienvenida al lab, Taba! Esta ruta te lleva de cero a tu primera contribución. Primero, el porqué del proyecto; después, los accesos, tu entorno, la teoría y el código. Termina con un PR tuyo. Haz clic en cualquier nodo para ver el detalle y los recursos, y ve marcando tu progreso. Debajo del mapa están la checklist de la primera semana, el setup paso a paso, las reglas, el equipo, el glosario, preguntas frecuentes y la bibliografía.",
+  "idea": "¡Bienvenida al lab, Tabata! Esta ruta te lleva de cero a tu primera contribución. Primero, el porqué del proyecto; después, los accesos, tu entorno, la teoría y el código. Termina con un PR tuyo. Haz clic en cualquier nodo para ver el detalle y los recursos, y ve marcando tu progreso. Debajo del mapa están la checklist de la primera semana, el setup paso a paso, las reglas, el equipo, el glosario, preguntas frecuentes y la bibliografía.",
   "docs": [
     {"label": "Norte del proyecto (empieza aquí)", "path": "../norte.md"},
     {"label": "Roadmap del proyecto", "path": "roadmap.html"},
@@ -35,7 +35,7 @@
       "status": "todo",
       "desc": "Algunos accesos tardan (el de DINOv3 depende de que Meta apruebe). Pídelos todos el primer día y sigue con la teoría mientras llegan. Los accesos a GitHub y Drive los da Daniel.",
       "right": [
-        {"t": "GitHub: colaboradora en amtaai/lab-cv-amta", "d": "Pedirle a Daniel acceso de escritura al repo `amtaai/lab-cv-amta`. Trabajarás en tu propia rama `dev/taba`.", "r": [{"l": "Repo lab-cv-amta", "u": "https://github.com/amtaai/lab-cv-amta", "tipo": "repo"}]},
+        {"t": "GitHub: colaboradora en amtaai/lab-cv-amta", "d": "Pedirle a Daniel acceso de escritura al repo `amtaai/lab-cv-amta`. Trabajarás en tu propia rama `dev/tabata`.", "r": [{"l": "Repo lab-cv-amta", "u": "https://github.com/amtaai/lab-cv-amta", "tipo": "repo"}]},
         {"t": "Google Drive: carpeta Amta_lab", "d": "`MyDrive/Amta_lab` es la persistencia del lab en Colab: `models/`, `datasets/` y `outputs/`. Pedir acceso a Daniel."},
         {"t": "Google Colab", "d": "Los notebooks pesados corren en Colab. Coordinar con Daniel el uso de las unidades de cómputo del equipo."},
         {"t": "Hugging Face + acceso a DINOv3", "d": "Crear cuenta y token, y **pedir acceso** en la página de `facebook/dinov3-*`: es un repo gated y Meta aprueba a mano. Un 401 significa que falta el token; un 403, que falta la aprobación.", "r": [{"l": "Tokens de Hugging Face", "u": "https://huggingface.co/settings/tokens", "tipo": "doc"}]},
@@ -55,7 +55,7 @@
         {"t": "Git + GitHub CLI", "k": "tool", "d": "El remoto es HTTPS; `gh auth login` configura las credenciales.", "r": [{"l": "GitHub CLI", "u": "https://cli.github.com/", "tipo": "doc"}]},
         {"t": "Docker Desktop", "k": "tool", "d": "Levanta la cascada, la API y el simulador de cámara. El servicio `cascade` pide GPU NVIDIA (`runtime: nvidia`). Ver la FAQ si no tienes una.", "r": [{"l": "Docker Compose", "u": "https://docs.docker.com/compose/", "tipo": "doc"}]},
         {"t": "VS Code + extensión Google Colab", "k": "tool", "d": "Editas los notebooks localmente y los ejecutas en Colab: kernel → Colab → **New Colab Server** para elegir la GPU; al terminar, **Remove Server**."},
-        {"t": "Clonar el repo y crear dev/taba", "d": "Tu rama sale de `dev/daniel-v-jepa-2` (la rama de integración). `main` está protegida: solo se llega por PR."}
+        {"t": "Clonar el repo y crear dev/tabata", "d": "Tu rama `dev/tabata` sale de `main`. `main` está protegida: solo se llega por PR."}
       ]
     },
     {
@@ -182,7 +182,7 @@
       "desc": "Una tarea chica, real y del camino crítico. Candidata recomendada: **agregar `ts` absoluto (UTC) y `camara_id` a las detecciones** (primer paso de L1). Confírmala con Daniel antes de empezar.",
       "right": [
         {"t": "Elegir la tarea con Daniel", "d": "Del roadmap del proyecto, fase L1. Una tarea = un PR."},
-        {"t": "Rama dev/taba → PR", "d": "Commits chicos; PR hacia `dev/daniel-v-jepa-2` con qué cambia, por qué y cómo se probó. Daniel es quien mergea a `main`."},
+        {"t": "Rama dev/tabata → PR", "d": "Commits chicos; PR hacia `main` con qué cambia, por qué y cómo se probó. Daniel revisa y mergea."},
         {"t": "Tests incluidos", "d": "Todo cambio a la cascada viene con su test en `tests/cascade/`."},
         {"t": "Actualizar el roadmap", "d": "Marca tu tarea en `docs/roadmap/roadmap.json` y regenera el HTML en el mismo PR."}
       ]
@@ -212,7 +212,7 @@
         {"t": "**Día 1** · Pedir todos los accesos (GitHub, Drive Amta_lab, Colab, HF + DINOv3)", "d": "Ver la fase 2 del mapa."},
         {"t": "**Día 1** · Recorrer el roadmap del proyecto y el prior art"},
         {"t": "**Día 2** · Instalar Git, gh, Docker Desktop, VS Code + extensión Colab"},
-        {"t": "**Día 2** · Clonar el repo, crear `dev/taba` y tu `.env`"},
+        {"t": "**Día 2** · Clonar el repo, crear `dev/tabata` y tu `.env`"},
         {"t": "**Día 2–3** · Leer YOLO, YOLO-World y Grounding DINO (al menos el abstract y la figura principal)"},
         {"t": "**Día 3–4** · Leer SAM 2, SAM 3 y ByteTrack"},
         {"t": "**Día 4** · Leer `v-jepa-2/README_cascade.md` completo"},
@@ -230,7 +230,7 @@
       "intro": "Comandos para Git Bash o una terminal de VS Code en Windows. Cada bloque tiene un botón para copiar.",
       "items": [
         {"t": "Autenticarte en GitHub", "d": "El repo usa HTTPS; `gh` configura las credenciales de git.", "code": "gh auth login\ngh auth status"},
-        {"t": "Clonar y crear tu rama", "d": "Tu rama sale de la rama de integración.", "code": "git clone https://github.com/amtaai/lab-cv-amta.git\ncd lab-cv-amta\ngit fetch origin\ngit switch -c dev/taba origin/dev/daniel-v-jepa-2\ngit push -u origin dev/taba"},
+        {"t": "Clonar y crear tu rama", "d": "Tu rama sale de `main`. Las otras ramas `dev/*` del repo son históricas y ya están integradas en `main`: no trabajes sobre ellas.", "code": "git clone https://github.com/amtaai/lab-cv-amta.git\ncd lab-cv-amta\ngit switch -c dev/tabata origin/main\ngit push -u origin dev/tabata"},
         {"t": "Crear tu .env", "d": "Completar `HF_TOKEN` y `ROBOFLOW_API_KEY`. Nunca commitear este archivo.", "code": "cp .env.example .env"},
         {"t": "Build de la imagen de la cascada", "d": "Tarda la primera vez (descarga torch con CUDA).", "code": "cd v-jepa-2/docker\ndocker compose build cascade"},
         {"t": "Correr los tests", "code": "docker compose run --rm cascade python -m pytest tests/cascade -v"},
@@ -269,7 +269,7 @@
         {"name": "Alex", "role": "Cascada de vigilancia · API · Docker (`dev/alex`)", "d": "Cómo corre la cascada, el corpus (`corpus/raw/`), la evaluación y el medidor de costo."},
         {"name": "Dorian", "role": "Bancos de prueba YOLO / YOLO-World / Grounded-SAM 2 (`dev/dorian`, prefijo `drn_`)", "d": "Notebooks de detección y docs de fundamentos."},
         {"name": "Daniel López", "role": "DINOv3 y Florence-2 (`dev/daniel`, prefijo `dnl_`)", "d": "Notebooks y documentación técnica de DINOv3 / Florence-2. Ya tiene acceso a los repos gated de DINOv3."},
-        {"name": "Taba", "role": "¡Nueva integrante!", "d": "Tus notebooks pueden llevar un prefijo propio (a acordar con Daniel)."}
+        {"name": "Tabata", "role": "¡Nueva integrante!", "d": "Tus notebooks pueden llevar un prefijo propio (a acordar con Daniel)."}
       ]
     },
     {
