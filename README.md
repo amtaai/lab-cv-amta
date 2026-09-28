@@ -1,22 +1,26 @@
 # lab-cv-amta
 
-Laboratorio de computer vision de AMTA. Reúne el testeo comparado de pipelines de
-detección/segmentación (Grounding DINO, SAM2, Florence-2, YOLO-seg, YOLO-World, DINOv3),
-el subproyecto `v-jepa-2/` de detección con auto-corrección, y la línea de caracterización
-de **froth de flotación** a partir de video.
+Laboratorio de computer vision de AMTA.
 
-El caso de aplicación transversal es el froth flotation: enmascarar burbujas, contarlas,
-medir dirección y radio, y caracterizar el estado operativo de la celda. Sirve a la vez
-como banco de prueba de la potencia real de cada pipeline.
+**Norte:** dado un prompt en lenguaje natural sobre una cámara ("personas que entran a la
+tienda A"), detectar y seguir esos objetos y convertir el seguimiento en **eventos y series
+temporales** (entradas, salidas, ocupación, permanencia por zona y ventana de tiempo) sobre
+las que se pueda hacer EDA y entrenar modelos de ML. El producto no son las máscaras: son
+los datos que salen de ellas. Documento rector: [`docs/norte.md`](docs/norte.md) (contrato
+de datos L1/L2/L3 y estado contra el norte).
+
+Piezas: la plataforma de detección + conteo + API en `v-jepa-2/` (cascada de vigilancia),
+los bancos de prueba de modelos candidatos (Grounding DINO, SAM2, Florence-2, YOLO-seg,
+YOLO-World, DINOv3) y la línea de caracterización de **froth de flotación**, hoy **en pausa**.
 
 ## Estructura
 
 | Carpeta | Qué hay |
 |---|---|
 | `dino_v3/`, `sam2_ov_florence_2/`, `sam2_ov_grounded/`, `yolo_seg/`, `yolo_world/` | Una carpeta por pipeline: notebook de prueba + repo upstream en `third_party/` (gitignoreado). Prefijos de autoría: `dnl_` = Daniel López, `drn_` = Dorian |
-| `docs/` | Documentación técnica de los modelos (DINOv3, Florence-2, SAM2, Grounding DINO, YOLO) |
-| `froth_gate/` | Experimento GATE: comparación controlada C1/C2/C3 sobre el dataset IEEE (ver su `README.md`) |
-| `v-jepa-2/` | Subproyecto de detección "intuitiva" con lazo de auto-corrección. Scaffold + smoke test del encoder V-JEPA 2.1 |
+| `docs/` | `norte.md` (documento rector) + documentación técnica de los modelos (DINOv3, Florence-2, SAM2, Grounding DINO, YOLO) |
+| `froth_gate/` | **En pausa.** Experimento GATE C1/C2/C3 sobre el dataset IEEE (ver su `README.md`) + pipelines A/B de Dorian |
+| `v-jepa-2/` | Plataforma: cascada de vigilancia (movimiento → detección por prompt → ByteTrack → ReID → conteo), evaluación, medición de costo, API FastAPI y tests (ver `v-jepa-2/README_cascade.md`). Aloja también el scaffold del lazo de auto-corrección y el smoke test de V-JEPA 2.1 |
 | `data_froth/`, `local_docs/`, `handoffs/` | Datos y documentación de trabajo — **no versionados** (ver `.gitignore`) |
 
 ## Topología: dónde corre cada cosa
@@ -159,56 +163,37 @@ en la salida de la celda.
 
 # Pendientes
 
-## GATE froth (`froth_gate/`) — en ejecución
+Orden de prioridad según el norte (`docs/norte.md` §4). La percepción está resuelta y
+medida; lo que falta es la mitad de datos.
 
-- [x] **C1** (features geométricas industriales) extraído: 2.386 secuencias, 57 features,
-      46 min de CPU local.
-- [ ] **C2 (DINOv3) bloqueado**: falta la aprobación de acceso a los repos gated
-      `facebook/dinov3-vits16-pretrain-lvd1689m` y `-vitb16-`. Alternativa: usar una cuenta
-      que ya la tenga.
-- [ ] **C3 (V-JEPA 2.1)**: correr la extracción en Colab T4, pasada normal + permutada. No
-      depende de Hugging Face, así que puede correrse mientras se espera la aprobación.
-- [ ] Bajar los `.npz` de Drive a `froth_gate/results/` y correr `gate_analysis.py` para
-      obtener el veredicto GO/NO-GO.
-- [ ] Verificar si los nombres internos de los zips IEEE codifican celda o fecha
-      (habilitaría los splits de transferencia entre celdas).
-- [ ] Revisar el estado del arte más cercano (clasificación de condición de froth con redes
-      espacio-temporales) antes de escribir cualquier texto publicable. Los resultados
-      externos se verifican abriendo el paper, no por la existencia de la cita.
+## 1. De detecciones a datos (prioridad)
 
-Dos observaciones ya medidas sobre C1, que condicionan la lectura del resultado final:
-la baseline geométrica es fuerte (F1 macro 91,9 con una regresión logística), y **permutar
-el orden de los frames casi no la degrada** (91,7), lo que confirma que a 0,4 s no hay señal
-temporal explotable. Además, al partir por bloques contiguos de `seq_id` en vez de
-aleatoriamente, C1 cae a 84,3: hay leakage temporal suave en el k-fold, porque secuencias
-vecinas comparten condiciones de captura.
+- [ ] **L1 enriquecida**: agregar `camara_id`, `ts` absoluto (UTC), `prompt` y `modelo` a
+      cada detección; coordenadas normalizadas [0,1].
+- [ ] **Zonas con nombre**: polígonos y líneas declarados por cámara (`zona_id`), no solo la
+      línea de conteo por defecto.
+- [ ] **L2 eventos** con timestamp: `entrada`, `salida`, `cruce`, `permanencia`, `ocupacion`
+      por `track_id` y zona — hoy el conteo solo sale agregado por clip.
+- [ ] **L3 agregados** por ventana configurable (1 min / 15 min / 1 h / 1 día).
+- [ ] **Persistencia en Parquet** particionado por cámara y fecha; exponer L1/L2/L3 en la API.
+- [ ] **Notebook de EDA** sobre L3 (distribuciones, picos, estacionalidad) como primer
+      consumidor del contrato, y un baseline de ML (p. ej. pronóstico de afluencia).
+- [ ] **Prompt de punta a punta**: que el prompt de la petición gobierne la detección (hoy
+      solo YOLO-World lo usa; el default YOLO11 tiene clases COCO fijas).
 
-## Subproyecto `v-jepa-2/`
+## 2. Percepción (mejoras)
 
-- [ ] Todo `core/` son stubs con `NotImplementedError`: encoder, detector open-vocab,
-      segmentador SAM2, tracker, VLM verificador, pseudo-labeler, drift monitor, trainer.
-- [ ] Portar a `core/perception/encoder.py` el patrón validado en el smoke test (carga
-      manual del checkpoint + parche RoPE + fp16 en T4).
-- [ ] Decidir qué VLM verificador entra en los límites reales de una T4.
-- [ ] Web demo local (Streamlit) con el modelo destilado.
-- [ ] **No hay ningún test**, ni siquiera del scaffold y la config.
+- [ ] Evaluar como backends de N2 los modelos de los bancos de prueba (Grounding DINO,
+      SAM2 con máscaras, Florence-2), midiendo su efecto sobre la precisión del conteo (L2).
+- [ ] Portar a `core/perception/encoder.py` el patrón validado del smoke test de V-JEPA 2.1
+      (carga manual + parche RoPE + fp16 en T4), si se decide usarlo para eventos ricos.
+- [ ] Lazo de auto-corrección (VLM verificador + pseudo-labels): largo plazo.
 
-## Smoke test / mediciones
+## 3. Froth — en pausa
 
-- [ ] Medir 64 frames con el parche RoPE activo (con 0,7 GB a 32 frames es muy probablemente
-      viable, pero sigue sin medirse).
-- [ ] Medir el tier ViT-L en T4.
-- [ ] Repetir el smoke test con un clip del dominio real en vez del clip de ejemplo.
-
-## Testbed de burbujas
-
-- [ ] Subir los videos de froth a Drive y generar link compartido (son CC) para bajarlos con
-      `gdown --folder` sin pedir permisos de Drive.
-- [ ] Correr los 5 notebooks de pipelines sobre los videos de froth y cablear sus salidas a
-      `Amta_lab/outputs/` — hoy escribirían en `/content` y se perderían con la VM.
-- [ ] Definir las métricas de comparación (calidad de máscara, conteo, dirección, radio
-      promedio) y armar la tabla comparativa final con calidad/velocidad/VRAM en T4.
-- [ ] Replicar el patrón de sincronización VM↔Drive en los 5 notebooks.
+- [ ] GATE froth: C2 (DINOv3, bloqueado por acceso gated), C3 (V-JEPA 2.1) y veredicto con
+      `gate_analysis.py`. Sin trabajo activo hasta nuevo aviso. C1 ya medido: F1 macro
+      91,9; permutando frames 91,7; split por bloques 84,3 (leakage temporal suave).
 
 ## Repo
 
